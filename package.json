@@ -1,0 +1,37 @@
+{
+  "name": "clclark-fcc-book-club",
+  "version": "1.0.1",
+  "description": "Book Club App for Free Code Camp requirements",
+  "main": "server.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CLClark/fcc-book-club"
+  },
+  "homepage": "https://fcc-book-club.herokuapp.com/",
+  "bugs": "https://github.com/CLClark/fcc-book-club/issues",
+  "keywords": [
+    "full stack",
+    "Express",
+    "Node",
+    "javascript",
+    "nginx",
+    "herokuapp"
+  ],
+  "scripts": {
+    "start": "node server.js"
+  },
+  "authors": "Chris L Clark",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "connect-pg-simple": "^4.2.1",
+    "cors": "^2.8.4",
+    "dotenv": "^1.2.0",
+    "express": "^4.16.2",
+    "express-session": "^1.15.6",
+    "passport": "^0.3.2",
+    "passport-facebook": "^2.1.1",
+    "pg": "^7.4.1",
+    "queue": "^4.4.2"
+  }
+}

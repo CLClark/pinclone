@@ -1,1 +1,15 @@
 *.odt
+node_modules/
+.eslintrc
+.env
+.settings
+.vscode/
+enc/
+/server_keystore.jks
+/csr-for-myserver.pem
+/keypairout.key
+/fcc-dynamic
+/deepstream
+/fcc-nightlife
+/working
+/fcc-book-club-clone

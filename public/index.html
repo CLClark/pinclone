@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>pinclone: FCC Pinterest Clone</title>
+
+	<link href="/public/css/main.css" rel="stylesheet" type="text/css">
+	<!--Load the AJAX API-->
+	<script type="text/javascript" src="common/ajax-functions.js"></script>		
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+	<script type="text/javascript" src="common/masonry.pkgd.js"></script>
+	<!--Load the client controllers-->
+	<script type="text/javascript" src="controllers/authController.client.js"></script>
+	<script type="text/javascript" src="controllers/bookController.client.js"></script>
+	<!--Page specific initialization-->
+	<script type="text/javascript">
+		MYLIBRARY.init([MYLIBRARY.bookFormer, null, null]);			
+	</script>
+</head>
+<header></header>
+<body>
+	<!-- 	<div id="fb-root"></div> -->
+	<div id="navi-container" class="container">
+		<div id="searchResults">
+			Google Books <br> search results
+		</div>
+		<div id="navi" class="navi-menu">
+			<!-- <div id="api-icon" class="navicon">API ICON</div> -->
+			<div class="container" id="welcome-container">
+				<div id="welcome-text" class="naviconZ">
+					<div>Welcome to Pinclone
+						<span id="display-name"></span>!</div>
+				</div>
+				<span id="auth-container">
+				</span>
+				<div class="fb-login-button" data-max-rows="1" data-size="large" data-button-type="continue_with" data-show-faces="false"
+				 data-auto-logout-link="true" data-use-continue-as="false">
+				</div>
+				<div id="status"></div>
+			</div>
+		</div>
+	</div><div class="container-search">
+		<input type="text" id="gipSearch" name="q" class="sbar" placeholder="Link" style="display: none; flex: 2;">
+		<input type="text" id="gipTags" name="q" class="sbar" placeholder="description" style="display: none;">
+		<button class="btn" id="pin-adder"><p>ADD</p></button>
+	</div>
+	<div class="container center-bar">
+		<a href="/">
+			<div id="home-icon" class="naviconZ">
+			</div>
+		</a>
+		<input type="text" id="zipSearch" name="q" class="sbar" placeholder="Search Pins...">
+	
+	</div>
+	<div id="events-sup">
+		<div id="loading" lock="on">
+			<div class="w3-animate-fading">
+				<img id="loading-image" src="public/img/bookslogo.png" alt="Loading..." />
+			</div>
+		</div>
+	
+		<!--LEFT Column (Div that will hold the polls) -->
+		<div id="pollDb">
+			<div id="results-navi-wrap" class="trades-navi-wrap">
+				<div id="results-text-wrap" class="trades-text-wrap">
+					<h3 id="results-text"></h3>
+				</div>
+				<div id="results-navi" class="btn trades-navi">
+					results placeholder I
+					<!-- 	<img id="fresh-appts" src="public/img/refresh.png" alt="Reload my Trades" /> -->
+				</div>
+				<div id="results-navi-trade" class="btn trades-navi-trade">
+					results placeholder II
+				</div>
+			</div>
+			<!-- <img id="yourarea" src="public/img/yourarea.png" alt="Results" /> -->
+			<ul id="poll-view" class="poll-view-list"></ul>
+		</div>
+	
+		<!-- RIGHT Column (flex) -->
+		<div id="profile-container" style="display: none">
+		</div>
+	</div>
+</body>
+
+<footer>
+	<script type="text/javascript">	
+		AUTHLIB.init([MYLIBRARY.pinFormer,false, AUTHLIB.authScript]);
+		// AUTHLIB.navi();
+		AUTHLIB.authScript(false).then(() => {
+			AUTHLIB.finale();
+		}).catch((e) => {
+			console.log(e);
+		});
+			// AUTHLIB.fbControl();
+		MYLIBRARY.bookAdder(); //AUTHLIB.chooser);
+		// MYLIBRARY.bookFinder();
+	</script>
+</footer>
+
+</html>

@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Demo</title>
+	<link href="/public/css/main.css" rel="stylesheet" type="text/css">
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+	<script type="text/javascript" src="common/masonry.pkgd.js"></script>	
+</head>
+
+<body>	
+	<div class="grid">
+		<div class="grid-sizer"></div>
+		<div class="grid-item">
+			<img src="https://jquery.com/jquery-wp-content/themes/jquery/images/logo-jquery.png"></img>			
+		</div>
+		<div class="grid-item" style='height: 200px; background-size: cover; background-image: url("https://www.gannett-cdn.com/-mm-/754cd4c63704582486de7aca6555b0b7125e01fe/c=226-380-2770-3772&r=537&c=0-0-534-712/local/-/media/2018/05/28/USATODAY/USATODAY/636631406584321621-052818Mike-McCormick.jpg");'>
+		</div>
+		<div class="grid-item">...</div>
+		<div class="grid-item grid-item--width2">
+			asdf
+		</div>		
+	</div>
+</body>
+	<footer>
+		<script> 
+			$('.grid').masonry({
+				// set itemSelector so .grid-sizer is not used in layout
+				itemSelector: '.grid-item',
+				// use element for option
+				columnWidth: '.grid-sizer',
+				percentPosition: true
+			});
+			console.log("random masonry thing");
+		</script>
+	</footer>
+	
+</html>

@@ -1,14 +1,14 @@
 {
-  "name": "clclark-fcc-book-club",
+  "name": "clclark-fcc-pinclone",
   "version": "1.0.1",
-  "description": "Book Club App for Free Code Camp requirements",
+  "description": "Pintrest Clone for Free Code Camp requirements",
   "main": "server.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CLClark/fcc-book-club"
+    "url": "git+https://github.com/CLClark/pinclone"
   },
   "homepage": "https://fcc-book-club.herokuapp.com/",
-  "bugs": "https://github.com/CLClark/fcc-book-club/issues",
+  "bugs": "https://github.com/CLClark/pinclone/issues",
   "keywords": [
     "full stack",
     "Express",
@@ -29,8 +29,10 @@
     "dotenv": "^1.2.0",
     "express": "^4.16.2",
     "express-session": "^1.15.6",
+    "jquery": "^3.3.1",
     "passport": "^0.3.2",
     "passport-facebook": "^2.1.1",
+    "passport-twitter": "^1.0.4",
     "pg": "^7.4.1",
     "queue": "^4.4.2"
   }

@@ -44,11 +44,18 @@ routes(app, passport);
 const server = http.createServer(app);
 
 var port;
-if(process.env.LOCAL == true){
-	port = 8080;	
+
+//TODO: localize dotenv vars
+/* if(process.env.LOCAL !== true){
+	require('dotenv').load();
 }else{
-	port = '/tmp/nginx.socket';
-}
+} */
+
+// if(process.env.LOCAL == true){
+	port = 8080;	
+// }else{
+	// port = '/tmp/nginx.socket';
+// }
 
 server.listen(port, function () {
 	console.log('Node.js listening on port ' + port + '...');

@@ -7,6 +7,7 @@ var AUTHLIB = AUTHLIB || (function () {
 	var apiAuth = appUrl + '/auth/check';
 	var defSearch = null;
 	var loader;
+	var clearPins; //clears pin results for multiple functions
 	var _args = {}; // private
 	//polyfill:
 	if (window.NodeList && !NodeList.prototype.forEach) {
@@ -26,6 +27,34 @@ var AUTHLIB = AUTHLIB || (function () {
 			// some other initialising
 			loader = this.loadLock;
 			loader(false);
+
+			clearPins = function (givenParent){
+				var resultsView;
+				if(givenParent){
+					resultsView = document.getElementById(givenParent) || document.getElementById('poll-view');  
+				}else{
+					resultsView =document.getElementById('poll-view');
+				} 
+				return new Promise((resolve, reject) => {		
+					if(resultsView.lastElementChild == null){
+						resolve();
+					}
+					if(resultsView.lastElementChild.className !== "grid-sizer"){
+						//clears the existing...										
+						while (resultsView.firstChild && (resultsView.childElementCount > 1)) {
+							console.log(resultsView.lastElementChild.className);
+							resultsView.removeChild(resultsView.lastChild);
+							if(resultsView.lastElementChild.className == "grid-sizer"){
+								resolve();
+							}
+						}						
+					}else if(resultsView.lastElementChild.className == "grid-sizer"){
+						resolve();
+					}else{
+						reject();
+					}
+				});
+			}
 		},
 
 		navi: function () {
@@ -87,15 +116,10 @@ var AUTHLIB = AUTHLIB || (function () {
 
 		//executes after DOM loaded to contextually set up GUI, mimicking a user interaction
 		finale: function () {
-			let tradesBtn = document.querySelector("#my-trades");
 			//execute setup functions based on path
-			//trades
-			if (window.location.search == "?trades" && tradesBtn !== null) {
-				tradesBtn.dispatchEvent(new MouseEvent("click"));
-			}
 			let searchOursBtn = document.querySelector("#search-pins");			
 			//search our books
-			if (window.location.search == "?our-books" && searchOursBtn !== null) {
+			if (window.location.search == "?our-pins" && searchOursBtn !== null) {
 				searchOursBtn.dispatchEvent(new MouseEvent("click"));
 			}
 		},//finale 
@@ -187,20 +211,12 @@ var AUTHLIB = AUTHLIB || (function () {
 							dName.innerHTML = (", <br>" + authObj.displayName);
 						}
 						descriptUser(authObj);
-						/* 	if (document.querySelector("#appts-img") == null) {
-							document.querySelector("#trades-navi").insertBefore(makeAppts("My Appointments:"), document.querySelector("#fresh-appts"));
-						}*/
+					
 						//add "My Books" div
 						navi.appendChild(makeMyBooks());
 						//add listener
 						var booksBtn = document.querySelector("#my-pins");
 						booksBtn.addEventListener("click", myBooksFn, false);
-
-						/*  navi.appendChild(makeMyTrades());
-							//add listener
-							var tradesBtn = document.querySelector("#my-trades");
-							resolve(tradesBtn.addEventListener("click", myTradesFn, false)); 
-						*/
 
 						//search book club
 						navi.appendChild(makeSearchClub());
@@ -269,55 +285,7 @@ var AUTHLIB = AUTHLIB || (function () {
 					aPro1.innerHTML = "My Pins";
 					newDiv.appendChild(aPro1);
 					return newDiv;
-				}//makeMyBooks
-
-				//to-remove mytrades
-				function makeMyTrades() {
-					let newDiv = document.createElement("div");
-					newDiv.id = "my-trades";
-					newDiv.className = "navicon";
-					let aPro1 = document.createElement("a");
-					aPro1.className = "tab";
-					//href not used, event listener instead
-					// aPro1.href = "/my-trades";
-					aPro1.innerHTML = "My Trades";
-					aPro1.href = "/profile?trades";
-					newDiv.appendChild(aPro1);
-
-					//add listener for profile page
-					var tradeNavi = document.querySelector("#trades-navi");
-					if (tradeNavi !== null) {
-						tradeNavi.addEventListener("click", hideButton.bind(tradeNavi), false);
-					}
-					function hideButton() {
-						let trades = document.querySelector("#trades-view");
-						if (trades !== null) {
-							if (this.innerHTML == "Show Trades") {
-								trades.setAttribute("style", "display: unset");
-								trades.setAttribute("show-status", true);
-								this.innerHTML = "Hide Trades?";
-							} else {
-								trades.setAttribute("style", "display: none");
-								trades.setAttribute("show-status", false);
-								this.innerHTML = "Show Trades";
-							}
-						}
-					}//hideButton fn	
-
-					//add listener for new trade
-					let newTrade = document.querySelector("#trades-navi-trade");
-					if (newTrade !== null) {
-						newTrade.addEventListener("click", newTradeBtn.bind(newTrade), false);
-					}
-					function newTradeBtn(){
-						let nTrade = document.querySelector("#trades-navi-trade");
-						if (nTrade !== null) {
-							//navigate to trade page
-							window.location = "/trade";
-						}
-					}//newTradeBtn		
-					return newDiv;
-				}//makeMyTrades
+				}//makeMyBooks			
 
 				//execute on btn click
 				function myBooksFn() {
@@ -332,24 +300,23 @@ var AUTHLIB = AUTHLIB || (function () {
 						}
 						}//pathname == trades		
 					*/	
+					//clear the results...
+					resultsReset("My Pins:");				
 					//2. query node for user books
 					ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-pins', 8000, function (err, data, status) {
 						var pinsFound = JSON.parse(data);
 						if (err) { console.log(err) }
 						else if (pinsFound["pinsFound"] == "none" ) {
-							let place = document.querySelector("#poll-view");
-							place.innerHTML = "No pins found.";
+							resultsReset("No pins found.");
 						}
 						else {
-							let resultNote = document.querySelector("#results-text");
-							resultNote.innerHTML = "My Pins: ";
-							console.log(pinsFound);
-							divCB(pinsFound, 'poll-view', { classText: "owned-book", controls: "delete" }, null);
-						}
-						//1. declare results div
-						//3. display books as results					
-						//4. display corollary divs+functions (delete, add, etc)
-						// console.log(data);
+							resultsReset("My Pins: ").then(() => {
+								console.log(pinsFound);
+								divCB(pinsFound, 'poll-view', { classText: "owned-pin grid-item", controls: "delete" }, null);
+							}).catch((e) => {
+								console.log(e);
+							});						
+						}//else						
 					}));//ajax call				
 				}
 				//to-remove mytrades
@@ -434,30 +401,42 @@ var AUTHLIB = AUTHLIB || (function () {
 				}//makeAddPins
 
 				function addPin() {
-					tabColourer("add-pin");
-					//hide all unused search bars:
-					/* 	let allBars = document.querySelectorAll(".sbar");//to-remove
-						allBars.forEach((searchBar) => {
-							searchBar.setAttribute("style", "display: none");
-						});//to-remove 
-					*/
+					tabColourer("add-pin");					
 					//show our bar:
 					document.querySelector("#gipSearch").setAttribute("style", "display: unset"); 
-					document.querySelector("#gipTags").setAttribute("style", "display: unset"); 
-					//TODO: clear search results		?			
-					resultsReset("#poll-view", "Add Your New Pin: ")
-			
+					document.querySelector("#gipTags").setAttribute("style", "display: unset"); 			
+					document.querySelector("#pin-adder").setAttribute("style", "display: unset"); 	
 				}
-				function resultsReset(resultsSelector, resultsTitle){
-					let place = document.querySelector(resultsSelector);
-					if(place !== null){
-						place.innerHTML = "";
-					}
+				function resultsReset(resultsTitle, resultsSelector){
+					var resultsView;
 					let resultNote = document.querySelector("#results-text");
 					if(resultNote !== null){
 						resultNote.innerHTML = resultsTitle;
 					}		
-				}
+					return new Promise((resolve, reject) => {
+						if (resultsSelector) {
+							resultsView = document.getElementById(resultsSelector) || document.getElementById('poll-view');
+							if (resultsView.lastElementChild == null) { resolve(); }
+						} else {
+							resultsView = document.getElementById('poll-view');
+							if (resultsView.lastElementChild == null) { resolve(); }
+						}
+						if (resultsView.lastElementChild.className !== "grid-sizer") {
+							//clears the existing...										
+							while (resultsView.firstChild && (resultsView.childElementCount > 1)) {
+								console.log(resultsView.lastElementChild.className);
+								resultsView.removeChild(resultsView.lastChild);
+								if (resultsView.lastElementChild.className == "grid-sizer") {
+									resolve();
+								}
+							}
+						} else if (resultsView.lastElementChild.className == "grid-sizer") {
+							resolve();
+						} else {
+							reject();
+						}
+					});										
+				}//resultsReset
 				function makeSearchClub() {
 					let newDiv = document.createElement("div");
 					newDiv.id = "search-pins";
@@ -472,10 +451,10 @@ var AUTHLIB = AUTHLIB || (function () {
 
 				function searchClub() {
 					// console.log(window.location); //testing
-					if(window.location.pathname !== "/" && window.location.search !== "?our-books"){
+					if(window.location.pathname !== "/" && window.location.search !== "?our-pins"){
 						//redirect to home page
 						// console.log(window.location.pathname); //testing
-						window.location = "/?our-books";
+						window.location = "/?our-pins";
 					} else {
 						tabColourer("search-pins");
 						//hide all unused bars:
@@ -486,144 +465,15 @@ var AUTHLIB = AUTHLIB || (function () {
 						//show our bar:
 						document.querySelector("#zipSearch").setAttribute("style", "display: unset");
 						//reset Results Area:
-						resultsReset("#poll-view", "Our Books Results: ")
+						resultsReset("Our Pins: ").then(() => {
+							//default search
+							let keyVent = new KeyboardEvent("keypress", { keyCode: 13 })
+							document.querySelector('input#zipSearch').dispatchEvent(keyVent);
+						}).catch((e) => {
+							console.log(e);
+						});
 					}					
 				}//searchClub
-
-				/**			 
-				 * @param {String} addText 
-				 */
-				function makeAppts(addText) {
-					var newSpanTxt = document.createElement("img");
-					//				newSpanTxt.className = "alternate";
-					newSpanTxt.id = "appts-img";
-					newSpanTxt.src = "public/img/myappointments.png";
-					newSpanTxt.alt = "My Appointments: " + addText;
-					newSpanTxt.addEventListener('click', () => {
-						let clickEv = new Event('click');
-						document.querySelector("#fresh-appts").dispatchEvent(clickEv);
-					}, false);
-					return newSpanTxt;
-				}//makeAppts return
-
-				//query server for my appointments
-				function apptFind() {
-					//Inform User, app is "loading..."
-					var tempText = document.querySelector("#appts-text");
-					if (tempText !== null) {
-						tempText.innerHTML = "Loading...";
-						//toggle lock pic
-						loader(true);
-					}
-
-					//appointment functions
-					var proCon = document.querySelector("#profile-container") || null;
-					var request = ('/bars/db?');
-					//1. find appts loaded on current page
-					var haveAppts = document.querySelector("#trades-view");
-					var hApptsList = haveAppts.querySelectorAll(".poll-view-list-poll");
-					var ak2Add = [];
-					let qString;
-
-					for (var i = 0; i < hApptsList.length; i++) {
-						let ak = hApptsList[i].getAttribute("appt-key");
-						if (ak !== null) {
-							ak2Add.push("appts[]=" + ak);
-						}
-					}
-					if (ak2Add.length > 0) {
-						qString = ak2Add.join("&");
-						request += qString;
-					}
-					//2. get appt-key of those appts
-					//3. append the appt-keys to the request path
-					//4. xhr
-
-					/** GET /bars/db?appts[]= */
-					ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', request, false, function (data) {
-						if (tempText !== null) { tempText.innerHTML = "My Appointments:"; }
-						var apptsFound = JSON.parse(data);
-						console.log(apptsFound);
-						//no "new" bars compared to pre-delete					 
-						if (apptsFound.barsFound == "none") {
-							proCon.setAttribute("style", "display: unset");
-							// proCon.appendChild(makeAppts("none found"));						
-							loader(false);		//lockpic off			
-						}
-						//Found some appointments
-						else {
-							proCon.setAttribute("style", "display: unset");
-							//third arg is div class //divCB is called within barFormer.addElement
-							apptsFound.sort(function (a, b) {
-								let aTime = new Date(a.appt["timestamp"]);
-								let bTime = new Date(b.appt["timestamp"]);
-								return aTime.getTime() - bTime.getTime();
-							});
-							divCB(apptsFound, "trades-view", { "classText": " appt-wrap-sup" }, null);
-							addDeleteDiv();
-							//toggle lock pic
-							loader(false);
-						}
-						//unspin the icon
-						let refreshIcon = document.querySelector('#fresh-appts')
-						refreshIcon.className = refreshIcon.className.substring(0, (refreshIcon.className.length - 9));
-					}));
-
-					/**add a delete btn for each poll */
-					function addDeleteDiv() {
-						var pWrapSup = document.querySelectorAll(".appt-wrap-sup") || null;
-						for (var pWrapper of pWrapSup) {
-							if (pWrapper.querySelector(".delete-poll") == null) {
-								var deletePoll = document.createElement("div");
-								deletePoll.className = ("delete-poll");
-								var actionDel = document.createElement('a');
-								var pollDataDiv = pWrapper.querySelector(".poll-view-list-poll");
-								var keyOfPoll = pollDataDiv.getAttribute("appt-key");
-								var titleOfPoll = pollDataDiv.getAttribute("poll-title");
-								actionDel.setAttribute("appt-key", keyOfPoll);
-								actionDel.setAttribute("title", titleOfPoll);
-								var pollDel = document.createElement('div');
-								pollDel.className = "btn delete-btn";
-								pollDel.id = "delete-btn";
-								pollDel.innerHTML = "<span class=\"del-text\">remove</span>";
-								pollDel.setAttribute("style", "margin: auto;");
-								actionDel.appendChild(pollDel);
-								deletePoll.appendChild(actionDel);
-								pWrapper.appendChild(deletePoll);
-
-								actionDel.addEventListener('click', deleteCB.bind(actionDel), false);
-
-								function deleteCB() {
-									var keyS = this.getAttribute("appt-key");
-									var titleS = this.title;
-									var confirmDel = confirm("Expire your appointment: " + titleS + "?");
-									let that = this;
-									if (confirmDel == true) {
-										ajaxFunctions.ajaxRequestLim('DELETE', '/bars/db?appt=' + keyS, 5000, function (err, response, status) {
-											if (err) { console.log("request error \'delete\'"); }
-											else {
-												let nodeToRemove = that.parentNode.parentNode;
-												if (nodeToRemove.className == "poll-wrap-sup appt-wrap-sup") {
-													let nPare = nodeToRemove.parentNode;
-													nPare.removeChild(nodeToRemove);
-												}
-												let pollRoot = document.querySelector("#poll-view");
-												let resetThis = pollRoot.querySelector("div[appt-key='" + keyS + "']");
-												//existing super-bar node
-												if (resetThis !== null) {
-													resetThis.setAttribute("style", "");
-													resetThis.querySelector(".show-text").innerHTML = "click to book...";
-													resetThis.querySelector(".show-text").setAttribute("style", "");
-													resetThis.removeAttribute("appt-key");
-												}
-											}//else err
-										});
-									}
-								}//deleteCB
-							}//has .delete div child
-						}
-					}//function addDeelteteltelteltlet
-				}//apptFind()
 			});
 		},
 

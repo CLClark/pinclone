@@ -113,78 +113,7 @@ function PinsHandler() {
 		});
 		sreq.end();
 	}//allBooks function
-	/**will not need - storeBusinesses
-		function storeBusinesses(data) {
-			//		var pool4 = new pg.Pool(config);
-			//		var p = Promise.resolve();		
-			//		for (let i = 0; i < data.length; i++) {
-			//			p = p.then(() => {
-			//				storeBusiness(data[i], pool4);				
-			//			});			
-			//		}//for loop
 
-			var pool5 = new pg.Pool(config);
-			let books = [];
-
-			var multiBook = data.forEach(function (eachBook) {
-				var promToP = storeBusiness(eachBook, pool5);
-				books.push(promToP);
-			});
-
-			Promise.all(books)
-				.then(doneInserting => (pool5.end()))
-				.catch(e => { console.log(e + "store businesses error"); });
-
-		}//store businesses		
-		function storeBusiness(data, poolInst) {
-
-			return new Promise((resolve, reject) => {
-
-				var booksJSON = (data);
-
-				var pool4 = poolInst;
-				//			console.log("store business: ")
-				// var i = 0;		
-				const insertText = 'INSERT INTO books(\"busiName\", \"yelpID\") ' +
-					'VALUES($1, $2) ' +
-					'ON CONFLICT DO NOTHING RETURNING *';
-
-				var busName = new String(booksJSON.title).substring(0, 140) || null; //arbitrary cut off
-				var yelpId = new String(booksJSON.id).substring(0, 100) || null;
-
-				var insertValues = [];
-				insertValues.push(busName);
-				insertValues.push(yelpId);
-				// console.log(insertValues);
-
-				//new postgresql connection
-				pool4.connect()
-					.then(client2 => {
-						// console.log('pg-connected4');				
-						client2.query(insertText, insertValues, function (err, result) {
-							client2.release();
-							if (err) {
-								console.log(err);
-								reject(err);
-							} else {
-								resolve(result);
-								console.log("inserted books: " + result.rowCount);
-							}
-						});//client.query
-					})
-					.catch(err => console.error('error connecting2', err.stack));
-				//			.then(() => {pool4.end()});
-			}); //promise
-		}//store businesses
-	*/
-
-	/*	appt object:
-		timestamp	
-		userid	
-		yelpid	
-		location	
-		active
-	*/
 	//accepts JSON array of yelp businesses, then outputs JSON for client
 	function pinBuilder(result, opts, single) {
 		return new Promise((resolve, reject) => {
@@ -394,9 +323,9 @@ function PinsHandler() {
 		}//apptQMaker
 	}//bookBuilder2
 	/*********************** *****************************/
-	this.ourBooks = function (req, res) {
-		 //optional parameter "exclusion=user" to exclude "her own books" from results
-		console.log('handler.server.js.ourBooks');
+	this.ourPins = function (req, res) {
+		 //optional parameter "exclusion=user" to exclude "her own pins" from results
+		console.log('handler.server.js.ourPins');
 		var pool = new pg.Pool(config);
 
 		function queryMaker(exclTest) {
@@ -450,16 +379,17 @@ function PinsHandler() {
 				}//else, no search terms
 				function returnText(optQuery) {
 					//SELECT title, authors[1] FROM books WHERE tsv @@ to_tsquery($2);
-					let tmpText = 'SELECT books.title, books.volume, books.authors, books.isbn13, books.publisheddate, books.image_url, books.language, books.url, books.active, books.pages' +
-					', ownership.id, ownership.bookid, ownership.owner, ownership.active, ownership.date_added, ownership.date_removed ' +
-					' FROM ownership INNER JOIN books ON ownership.bookid = books.volume WHERE '
+					let tmpText = 'SELECT pins.title, pins.href, pins.image_url, pins.url, pins.active, pins.origindate, pins.volume, pins.tags, pins.lastchecked, pins.size, pins.fformat' +
+					// ', ownership.id, ownership.pinid, ownership.owner, ownership.active, ownership.date_added, ownership.date_removed ' +
+					', COUNT(*) AS pinned_count ' +
+					' FROM ownership INNER JOIN pins ON pins.volume = ownership.pinid WHERE '
 						+ optQuery +
 					' NOT ownership.active = false ';					
-					return tmpText.concat(" AND NOT ownership.owner = $1 ");					
+					return tmpText.concat(" AND NOT ownership.owner = $1 GROUP BY volume ");					
 				}//returnText fn
 			});
 		}
-		//does user want "her own books" exluded?
+		//does user want "her own pins" exluded?
 		var exclusion = req.query.exclude || false;
 
 		queryMaker(exclusion).then((textArray) => {
@@ -469,28 +399,31 @@ function PinsHandler() {
 			// console.log(values);
 			pool.connect()
 				.then(client => {
-					// console.log('pg-connected: getBooks')
+					// console.log('pg-connected: getPins')
 					client.query(text, values, function (err, result) {
 						if (err) {
 							res.status(403);
 							console.log(err);
-							console.log("get appts error");
-							res.json({ booksFound: "none" });
+							console.log("get pins error");
+							res.json({ pinsFound: "none" });
 						}
 						let rc = result.rowCount;
 						client.release();
 						if (rc == 0) {
 							res.status(200);
-							res.json({ booksFound: "none" });
+							res.json({ pinsFound: "none" });
 						} else {
-							console.log(JSON.stringify(result));
-							bookBuilder(result.rows, false)
+							console.log(JSON.stringify(result).substring(0,100));
+							/* bookBuilder(result.rows, false)
 								.then(builtBooks => {
 									console.log("built books: " + builtBooks);
 									res.json(builtBooks);
 								})
 								.catch(e => { console.log(e + "loopy Loop"); });
-							/* const promiseSerial = funcs =>
+							 */
+							res.json(result.rows);
+							
+							 /* const promiseSerial = funcs =>
 									funcs.reduce((promise, func) =>
 										promise.then(result => func().then(Array.prototype.concat.bind(result))),
 										Promise.resolve([])
@@ -514,7 +447,7 @@ function PinsHandler() {
 				.catch(err => console.error('error connecting', err.stack))
 				.then(() => pool.end());
 		})
-			.catch(err => console.error('error getAppts', err.stack))
+			.catch(err => console.error('error ourPins', err.stack))
 
 		//requests single business data from yelp api,
 		//TODO qps on a timer
@@ -594,19 +527,23 @@ function PinsHandler() {
 	/***************************************** */
 	this.myPins = function (req, res) {
 		var pool = new pg.Pool(config);
-		let limiterText;
+		/* let limiterText;
 		if(req.query.exclude = "untradable"){
 			limiterText = ' AND NOT ownership.tradeable = false';
 		} else {
 			limiterText = '';
-		}
+		} */
 		function queryMaker() {
 			return new Promise((resolve, reject) => {
 				//query for only active "true" appointments
-				var text = 'SELECT pins.title, pins.volume, pins.tags, pins.href, pins.lastchecked, pins.image_url, pins.url, pins.active, pins.origindate, pins.fformat, pins.size' +
-					', ownership.id, ownership.pinid, ownership.owner, ownership.active, ownership.date_added, ownership.date_removed ' +
-					' FROM ownership INNER JOIN pins ON ownership.pinid = pins.volume WHERE ownership.owner = $1 AND NOT ownership.active = false ' +
-					limiterText;
+				var text = 'SELECT pins.title, pins.href, pins.image_url, pins.url, pins.active, pins.origindate, pins.volume, pins.tags, pins.lastchecked, pins.size, pins.fformat' +
+					// ', ownership.id, ownership.pinid, ownership.owner, ownership.active, ownership.date_added, ownership.date_removed ' +
+					', COUNT(*) AS pinned_count ' +
+					' FROM ownership INNER JOIN pins ON pins.volume = ownership.pinid' +
+					' WHERE ownership.owner = $1 AND NOT ownership.active = false ' +
+					// limiterText + 
+					' GROUP BY volume';
+
 				const values = [];
 				var uid = req.user.id;
 				values.push(uid);
@@ -644,14 +581,7 @@ function PinsHandler() {
 								res.json({ pinsFound: "none" });
 							} else {
 								console.log(JSON.stringify(result.rows));
-								res.json(result["rows"]);								
-								/* bookBuilder(result.rows, false)
-									.then(builtBooks => {
-										console.log("built books: " + builtBooks);
-										res.json(builtBooks);
-									})
-									.catch(e => { console.log(e + "loopy Loop"); }); 
-								*/
+								res.json(result["rows"]);	
 							}
 						}//else no error
 					});
@@ -665,39 +595,18 @@ function PinsHandler() {
 	this.addMyPin = function (req, res) {
 		// https://www.googleapis.com/books/v1/volumes/volumeId
 
-		/**CODE FOR FILTERING ISBN
-		 * let info = JSON.parse(polljone["json_string"]);
-						let single = [];
-						if (info.hasOwnProperty("volumeInfo")) {
-							let idArr = info["volumeInfo"];
-							let indArr = Array.from(idArr["industryIdentifiers"]);
-							single = indArr.filter((ident) =>
-								ident.type == "ISBN_13"
-							);
-							// console.log(single); //testing
-							//has volumeInfo
-						} else if (info.hasOwnProperty("id")) {
-							single.push(info.id);
-						}
-						let addLink;
-						//using google volume id (not isbn) TODO: update query client/server
-						if (single.length > 0) {
-							// addLink = ('/my-books?isbn=' + single[0]["identifier"]);
-							addLink = single[0];
-						}//identifier true	
-						else {
-							addLink = ('/my-books?isbn=' + polljone.id);
-						}
-		  * 
-		 */
-
 		console.log('addMyPin callback');
 		var userId = new String(req.user.id).substring(0, 140) || null; //arbitrary cut off
 		var options;
 		//TODO: fix tags based on client format
-		var tagArr = Array.from(req.query.tags);
-		// var tagsToo = {tArray: JSON.stringify(tagArr)};		
-		var tagsToo = {};
+								
+		let rawTags = req.query.tags;
+		let tagArr = rawTags.split("+");
+		console.log(JSON.stringify(tagArr));
+		let tArrStr = JSON.stringify(tagArr);
+
+		var tagsToo = ('{' + JSON.stringify(tagArr).substring(1,(tArrStr.length-1)) + '}');
+		console.log(tagsToo);			
 
 		if (req.query.link !== null && req.query.link !== "undefined") {
 			//1 get the link [and tags?]
@@ -760,25 +669,7 @@ function PinsHandler() {
 								}).catch((e) => { console.log(e); })
 
 						} catch (e) { console.error(e); res.sendStatus(404); }
-					}
-					/* try {
-						var resJSON = JSON.parse(Buffer.concat(body1).toString());
-						bookBuilder(resJSON, false, true) //single object returned from google api, set true
-							.then((result) => {
-								//3 add to database with Google Data: books and ownership tables
-								// console.log("bookBuilder result: " + JSON.stringify(result));
-								return insertMyBook(result[0])
-									.then((insertResult) => {
-										console.log("insert result: " + insertResult)
-										return updateOwnership(req, result[0], true)
-									})
-									.then((updateRes) => {
-										res.json(updateRes);
-									}).catch((e) => { console.log(e); })
-							})
-							.catch((err) => { console.log(e); });
-						} catch (e) { console.error(e); res.sendStatus(404); }
-					 */
+					}					
 				});
 			});
 			sreq.on('error', (e) => {
@@ -970,247 +861,7 @@ function PinsHandler() {
 			});
 		}//removeMyBook fn
 	}//removeMyBook
-	/***************************************** */
-
-	//api call to "/my-trades"
-	this.myTrades = function (req, res) {
-		var pool = new pg.Pool(config);
-		//adds the tradeId to the postgres query, to narrow the search.
-
-		function preQueryFilter(){
-			return new Promise((resolve, reject) => {
-				if(req.query.hasOwnProperty('singleId')){
-					//send the addendum text and the trade id String
-					let tradeString = req.query.singleId;
-					resolve([tradeString, ' AND ( trades.id = $2) ']); //reverse order to pop later
-				}
-				else{
-					resolve(false);
-				}
-			});
-		}
-		function queryMaker(prequelArray) {
-			return new Promise((resolve, reject) => {
-				//trades db columns: "id","proposer","receiver","status","active","date_proposed","date_responded","paired_trade","pro_ownership","rec_ownership"
-				/* var text = 'SELECT books.title, books.volume, books.authors, books.isbn13, books.publisheddate, books.image_url, books.language, books.url, books.active, books.pages' +
-					', ownership.bookid, ownership.owner, ownership.active, ownership.date_added, ownership.date_removed ' +
-					' FROM ownership INNER JOIN books ON ownership.bookid = books.volume WHERE ownership.owner = $1 AND NOT ownership.active = false ' +
-					'';
-				 */
-				var text = 
-				' SELECT trades.id,trades.proposer,trades.receiver,trades.status,trades.active,trades.date_proposed,trades.date_responded,trades.paired_trade,trades.pro_ownership,trades.rec_ownership ' +
-				' FROM trades INNER JOIN ownership  proposer ON ( proposer.id = trades.pro_ownership ) INNER JOIN ownership receiver ON ( receiver.id = trades.rec_ownership ) ' +
-				' WHERE (trades.proposer = $1 OR trades.receiver = $1) AND NOT (trades.active = false) ' +
-				'';
-				// ' RETURNING * ' ;
-
-				const values = [];
-				var uid = req.user.id;
-				values.push(uid);
-
-				//check if query has any appts
-				/* 	if (req.query.hasOwnProperty('appts') && Array.isArray(req.query.appts)) {
-						//yes> add each appt and text to the arrays
-						console.log(Array.isArray(req.query.appts) + " : is array check");
-						let cap = req.query.appts.length - 1;
-						var combNots = req.query.appts.reduce(function (acc, cVal, cInd, array) {
-							values.push(cVal);
-							if (cInd < cap) {
-								return acc.concat(('$' + (2 + cInd) + ', '));
-							}
-							else {
-								return acc.concat(('$' + (2 + cInd)));
-							}
-						}, (text.concat(' AND _id NOT IN ('))
-						);
-						resolve([combNots.concat(')'), values]);
-					} 
-					// else {
-					//console.log(Array.isArray(req.query.appts) + " : is array check");
-					//no>return the text/values:
-				*/
-				if(prequelArray !== false){
-					//trade id given
-					resolve([(text.concat(prequelArray.pop())), values.concat(prequelArray)]);
-				} else {
-					//no trade id given
-					resolve([text, values]);
-				}
-				// }
-			});
-		}
-		//more code here
-
-		preQueryFilter().then((prequelResult) => {
-			//extract the single trade ID and supplement query text >
-			queryMaker(prequelResult).then((textArray) => {
-				var text = textArray[0];
-				// console.log(text);	
-				var values = textArray[1];
-				// console.log(values);
-				pool.connect()
-					.then(client => {
-						console.log('pg-connected: myTrades')
-						client.query(text, values, function (err, result) {
-							if (err) {
-								res.status(403);
-								console.log(err);
-								console.log("get appts error");
-								res.json({ tradesFound: "none" });
-							}
-							else {
-								let rc;
-								if (Array.isArray(result.rows)) {
-									rc = result.rowCount;
-								}
-								else {
-									rc = 0;
-								}
-								client.release();
-								if (rc == 0) {
-									res.status(200);
-									res.json({ tradesFound: "none" });
-								} else {
-									console.log("trades found: " + JSON.stringify(result.rows.size));
-
-									res.json(result.rows);
-									/* bookBuilder(result.rows, false)
-										.then(builtBooks => {
-											console.log("built books: " + builtBooks);
-											res.json(builtBooks);
-										})
-										.catch(e => { console.log(e + "loopy Loop"); });
-									 */
-								}
-								/* const promiseSerial = funcs =>
-										funcs.reduce((promise, func) =>
-											promise.then(result => func().then(Array.prototype.concat.bind(result))),
-											Promise.resolve([])
-										);
-									// convert each url to a function that returns a promise
-									const funcs = result.rows.filter(rowCheck => rowCheck).map(
-										pgResp => () => yelpSingle(pgResp, null)
-									);
-		
-									promiseSerial(funcs)
-										.then(promies => (bookBuilder(promies, true)))
-										.then(builtBooks => {
-											res.json(builtBooks);
-											// console.log("builtBarsVVVV");							
-										})
-										.catch(e => { console.log(e + "loopy Loop"); });
-								*/
-							}//else no error
-						});
-					})
-					.catch(err => console.error('error connecting', err.stack))
-					.then(() => pool.end());
-			});//queryMaker
-			
-		}).catch((e) => {
-			console.log(e);
-		});
-	}//myTrades
-	/***************************************** */
-
-	//for proposing a new trade
-	this.newTrade = function (req, res) {
-		let reqBook = req.body.requested.substring(0, 36);
-		let offeredBook = req.body.proposed.substring(0, 36);
-		console.log(reqBook + ":::" + offeredBook);
-
-		function checkTradeable(rBook, oBook) {
-			return new Promise((resolve, reject) => {
-				//query pgadmin?
-				var pool = new pg.Pool(config);
-				function queryMaker() {
-					return new Promise((resolve, reject) => {
-						//query for only active "true" appointments
-						var text = 'SELECT * FROM ownership WHERE ownership.id = $1 OR ownership.id = $2 AND NOT active = false';
-						const values = [rBook, oBook];
-						// var uid = req.user.id;
-						// values.push(uid);	
-
-						resolve([text, values]);
-					});
-				}
-				queryMaker().then((textArray) => {
-					var text = textArray[0];
-					// console.log(text);	
-					var values = textArray[1];
-					// console.log(values);
-					pool.connect()
-						.then(client => {
-							// console.log('pg-connected: getAppts')
-							client.query(text, values, function (err, result) {
-								client.release();
-								if (err) {
-									reject(false);
-									// res.status(403);
-									// console.log(err);
-									// console.log("check tradeable error");
-									// res.json({ trade: "error - untradeable" });
-								}
-								let rc = result.rowCount;
-								if (rc == 0) {
-									reject(false);									
-									// res.status(200);
-									// res.json({ trade: "no trades found" });
-								} else {
-									console.log(result.rows);
-									let untradeable = result.rows.filter(
-										(checking) =>  checking["tradeable"] == true	);
-									console.log("tradeable found: " + untradeable.length);
-									if (untradeable.length == 2) {
-										resolve(untradeable);
-									} else {
-										reject(untradeable);
-									}
-								} //else
-							});
-						})
-						.catch(err => console.error('error connecting', err.stack))
-						.then(() => pool.end());
-				})
-					.catch(err => console.error('error check tradeable', err.stack))
-			});
-
-		}//checkTradeable function
-
-		checkTradeable(reqBook, offeredBook)
-		.then((tradeable) => {
-			if(tradeable == false){
-				//rejected?
-				res.sendStatus(404);
-			}
-			if(tradeable.length < 2){
-				console.log("untradeable result");
-				//respond to client request
-				res.status(200); //TODO: change code to error
-				res.json({ trade: "untradeable"});
-			} else {
-				console.log("tradeable result");
-				//function to insert the trade
-				console.log(tradeable);
-				let passReq = tradeable.filter((each) => 
-					each.id == reqBook	
-				);
-				let passOffe = tradeable.filter((each) => 
-					each.id == offeredBook	
-				);
-				//insert into TRADES table
-				updateTrade(req, passReq[0], passOffe[0], true)
-				.then( (tradeResult) => {
-					//update ownership "tradeable" property for "requester's own proposed book"
-					updateTradeables([tradeResult.proId], false);	//make it untradeable
-				})
-				.catch((e) => {	console.log(e); });
-				// insertNewTrade(req, );	
-			}
-		})
-		.catch((e) => { console.log(e);});					
-
-	}//newTrade
+	/***************************************** */		
 
 	// to insert a new trade = query maker + DB call
 	function updateTrade(req, requestedOwn, proposedOwn, change) {
@@ -1661,6 +1312,11 @@ function PinsHandler() {
 		}//yelpSingle		
 	}//getAppts
 
+	//pin if not pinned, unpin if pinned
+	this.likeSwitch = function(req, res) {
+		res.sendStatus(200);		
+	}
+
 	/**addMyBook equivalent */
 	this.addAppt = function (req, res) {
 		var timeStamp = new String(req.query.date).substring(0, 140) || null;
@@ -1812,36 +1468,6 @@ function PinsHandler() {
 		console.log('deleteAppt callback');
 
 	}//this.deleteBar
-
-	/***search data for user profile + bars	
-		this.myBars = function (req, res) {
-			console.log('myBars callback');
-		};
-	 */
-
-	/***find a single bar in the db
-		this.singleBar = function (req, res, next) {
-			console.log('handler.server.js.singleBar');
-		}
-	 */
-
-	/***add singlebar
-		this.addBar = function (req, res) { 
-			console.log('handler.server.js.addBar');		
-		}
-	 */
-
-	/***poll remnant
-		this.removeChoice = function (req, res) {
-			console.log('removeChoice callback');
-		}
-	 */
-
-	/****poll remnant
-		this.addVote = function (req, res) {
-			console.log('addVote callback' + req.ip.substring(0,100));
-		}
-	 */
 
 }//BooksHandler
 

@@ -6,7 +6,7 @@
 
 	<link href="/public/css/main.css" rel="stylesheet" type="text/css">
 	<!--Load the AJAX API-->
-	<script type="text/javascript" src="common/ajax-functions.js"></script>		
+	<script type="text/javascript" src="common/ajax-functions.js"></script>
 	<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 	<script type="text/javascript" src="common/masonry.pkgd.js"></script>
 	<!--Load the client controllers-->
@@ -14,15 +14,28 @@
 	<script type="text/javascript" src="controllers/bookController.client.js"></script>
 	<!--Page specific initialization-->
 	<script type="text/javascript">
-		MYLIBRARY.init([MYLIBRARY.bookFormer, null, null]);			
+		const masonryFinale = function () {
+			$('.grid').masonry({
+				// set itemSelector so .grid-sizer is not used in layout
+				itemSelector: '.grid-item',
+				// use element for option
+				columnWidth: '.grid-sizer',
+				percentPosition: true,
+				horizontalOrder: true
+			});
+			console.log("random masonry thing");
+		}
+		MYLIBRARY.init([MYLIBRARY.pinFormer, masonryFinale, null]);			
 	</script>
 </head>
 <header></header>
+
 <body>
 	<!-- 	<div id="fb-root"></div> -->
 	<div id="navi-container" class="container">
 		<div id="searchResults">
-			Google Books <br> search results
+			Google Books
+			<br> search results
 		</div>
 		<div id="navi" class="navi-menu">
 			<!-- <div id="api-icon" class="navicon">API ICON</div> -->
@@ -39,10 +52,13 @@
 				<div id="status"></div>
 			</div>
 		</div>
-	</div><div class="container-search">
+	</div>
+	<div class="container-search">
 		<input type="text" id="gipSearch" name="q" class="sbar" placeholder="Link" style="display: none; flex: 2;">
 		<input type="text" id="gipTags" name="q" class="sbar" placeholder="description" style="display: none;">
-		<button class="btn" id="pin-adder"><p>ADD</p></button>
+		<button class="btn" id="pin-adder" style="display: none;">
+			<p>ADD</p>
+		</button>
 	</div>
 	<div class="container center-bar">
 		<a href="/">
@@ -50,7 +66,7 @@
 			</div>
 		</a>
 		<input type="text" id="zipSearch" name="q" class="sbar" placeholder="Search Pins...">
-	
+
 	</div>
 	<div id="events-sup">
 		<div id="loading" lock="on">
@@ -58,43 +74,36 @@
 				<img id="loading-image" src="public/img/bookslogo.png" alt="Loading..." />
 			</div>
 		</div>
-	
-		<!--LEFT Column (Div that will hold the polls) -->
+
+		<!--Column (Div that will hold the pins) -->
 		<div id="pollDb">
 			<div id="results-navi-wrap" class="trades-navi-wrap">
 				<div id="results-text-wrap" class="trades-text-wrap">
-					<h3 id="results-text"></h3>
-				</div>
-				<div id="results-navi" class="btn trades-navi">
-					results placeholder I
-					<!-- 	<img id="fresh-appts" src="public/img/refresh.png" alt="Reload my Trades" /> -->
-				</div>
-				<div id="results-navi-trade" class="btn trades-navi-trade">
-					results placeholder II
+					<h3 id="results-text"> </h3>
+					<h4 id="results-text-results"></h4>
 				</div>
 			</div>
-			<!-- <img id="yourarea" src="public/img/yourarea.png" alt="Results" /> -->
-			<ul id="poll-view" class="poll-view-list"></ul>
+
+			<div id="poll-view" class="grid pin-view-list">
+				<div class="grid-sizer"></div>
+			</div>
 		</div>
-	
-		<!-- RIGHT Column (flex) -->
-		<div id="profile-container" style="display: none">
-		</div>
+
 	</div>
 </body>
 
 <footer>
 	<script type="text/javascript">	
-		AUTHLIB.init([MYLIBRARY.pinFormer,false, AUTHLIB.authScript]);
+		AUTHLIB.init([MYLIBRARY.pinFormer, false, AUTHLIB.authScript]);
 		// AUTHLIB.navi();
 		AUTHLIB.authScript(false).then(() => {
 			AUTHLIB.finale();
 		}).catch((e) => {
 			console.log(e);
 		});
-			// AUTHLIB.fbControl();
+		// AUTHLIB.fbControl();
 		MYLIBRARY.bookAdder(); //AUTHLIB.chooser);
-		// MYLIBRARY.bookFinder();
+		MYLIBRARY.bookFinder();
 	</script>
 </footer>
 

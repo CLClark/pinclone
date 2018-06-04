@@ -111,6 +111,11 @@ module.exports = function (app, passport) {
 		.post(isLoggedIn, pinsHandler.addMyPin)
 		.delete(isLoggedIn, pinsHandler.removeMyPin);
 
+	app.route('/our-pins')
+		.get(pinsHandler.ourPins)
+		.post(isLoggedIn, pinsHandler.likeSwitch);
+		// .delete(isLoggedIn, pinsHandler.updateOwnership);
+
 /* 
 	//form module
 	var bodyParser = require('body-parser');

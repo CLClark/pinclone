@@ -61,6 +61,10 @@
 	/* margin-right: auto; */
 	border: 1px solid hsla(0, 0%, 0%, 0.5)
 }
+#pin-count-count{
+	margin-right: 10%;	
+	float: right;
+}
 
 /****** Main Styling ******/
 
@@ -349,16 +353,16 @@ img {
 }
 
 .btn {	/* Styling for buttons */
-	margin: auto 4px;
+	margin-left:auto;
 	color: white;
-	background-color: #acacffbd;
+	background-color: #dd5800bd;
 	display: inline-block;
 	border: 0;
 	font-size: 14px;
-	border-radius: 3px;
-	padding: 10px 5px;
-	/* width: 100px; */
+	border-radius: 3px;	
+	width: 33.333%;
 	font-weight: 500;
+	text-align: center;
 	cursor: pointer;
 }
 

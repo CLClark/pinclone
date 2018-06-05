@@ -461,8 +461,7 @@ var AUTHLIB = AUTHLIB || (function () {
 						let allBars = document.querySelectorAll(".sbar");
 						allBars.forEach((searchBar) => {
 							searchBar.setAttribute("style", "display: none");
-							document.querySelector("#pin-adder").setAttribute("style", "display: none");
-							
+							document.querySelector("#pin-adder").setAttribute("style", "display: none");							
 						});
 						
 						//show our bar:

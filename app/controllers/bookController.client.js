@@ -246,10 +246,22 @@ var MYLIBRARY = MYLIBRARY || (function () {
 				//count div 
 				var countDiv = document.createElement("div");
 				countDiv.className = "pin-count";
-				countDiv.setAttribute("pole",true); //this tells the link to include"pin" or "unpin"
-				if (polljone["pinned_count"] >= 0) {
-					countDiv.innerHTML = polljone["pinned_count"] + " 🌟";
+				var countCount = document.createElement("div");
+				countCount.innerHTML = "0";
+				countCount.id = "pin-count-count";
+				var countSym = document.createElement("span");
+				countSym.innerHTML = " 🌟" ;
+				countDiv.appendChild(countCount);
+				countDiv.appendChild(countSym);
 
+				//setup the "like button" based on server info
+				if(polljone["self_likes"] == "1"){
+					//already liked, prep to unlike
+					countDiv.setAttribute("pole",false); 					
+					countDiv.setAttribute("style", "background-color:green;");	
+				}
+				if (polljone["pinned_count"] >= 0) {
+					countCount.innerHTML = polljone["pinned_count"] ;
 					countDiv.addEventListener("click", likeAction.bind(countDiv), { once: false });
 					function likeAction() {
 						let bound = this;
@@ -261,19 +273,55 @@ var MYLIBRARY = MYLIBRARY || (function () {
 							else {
 								//handle the server response
 								let pinResp = JSON.parse(data);
+								let arith = bound.querySelector("#pin-count-count");							
 								if(pinResp.pinStatus == true){
 									bound.setAttribute("pole",false);
-									bound.setAttribute("style", "background-color:green;");								
+									bound.setAttribute("style", "background-color:green;");										
+									arith.innerHTML = ((parseInt(arith.innerHTML,10)) + 1);
 								}else{
 									bound.setAttribute("pole",true);
-									bound.setAttribute("style", "");								
+									bound.setAttribute("style", "");
+									arith.innerHTML = ((parseInt(arith.innerHTML,10)) - 1);								
 								}				
 							}
 						}));
 					}//likeAction	
 
 					newWrapSup.appendChild(countDiv);
-				}
+				}//pinnedcount
+
+				//setup delete button
+				if (polljone["owned_pin"] !== "0") {
+					let addButton = document.createElement("div");
+					addButton.className = "btn";	
+
+					addButton.innerHTML = "Delete?";
+					addButton.addEventListener("click", delAction.bind(addButton), { once: true });
+					var thisPin = polljone["volume"]
+					function delAction() {
+						if (window.confirm("This will delete pin. Confirm removal?")) {
+							let bound = this;
+							bound.innerHTML = "...";
+							bound.setAttribute("style", "background-color:grey;");
+							ajaxFunctions.ready(ajaxFunctions.ajaxRequest('DELETE', 'my-pins?pinid=' + thisPin, 8000, function (err, data, status) {
+								let delResp = JSON.parse(data);
+								if (err) { console.log(err); bound.innerHTML = "Error"; }
+								else if(delResp["status"] == "Successful remove"){
+									//handle the server response
+									bound.setAttribute("style", "background-color: grey;");
+									bound.innerHTML = "ok!";
+									let parNode = bound.parentNode;
+									let parParNode = parNode.parentNode;
+									parParNode.removeChild(bound.parentNode);
+								} else{									
+								}
+							}));
+						}//alert box 
+					}//delAction
+
+					//append to DOM
+					newWrapSup.appendChild(addButton);
+				}//delete
 
 				//"sup" wrap background image
 				if (pinCopy["image_url"]) {
@@ -433,6 +481,8 @@ var MYLIBRARY = MYLIBRARY || (function () {
 						// console.log(addLink); // testing
 						let addButton = document.createElement("div");
 						addButton.className = "btn";
+						//append to DOM
+						newDiv.appendChild(addButton);
 						if (controlType == "add") {
 							addButton.innerHTML = "Add to Your Collection?";
 							addButton.addEventListener("click", addAction.bind(addButton), { once: true });
@@ -463,23 +513,8 @@ var MYLIBRARY = MYLIBRARY || (function () {
 									}
 								}));
 							// }//alert box
-						}//addAction							
-						function delAction() {
-							if (window.confirm("This will cancel any pending trades. Confirm book removal?")) {
-								let bound = this;
-								bound.innerHTML = "Please Wait...";
-								bound.setAttribute("style", "background-color:grey;");
-								ajaxFunctions.ready(ajaxFunctions.ajaxRequest('DELETE', addLink, 8000, function (err, data, status) {
-									if (err) { console.log(err); bound.innerHTML = "Error"; }
-									else {
-										//handle the server response
-										bound.setAttribute("style", "background-color: grey;");
-										bound.innerHTML = "Removed";
-										// console.log(data);
-									}
-								}));
-							}//alert box 
-						}//delAction
+						}//addAction			
+						
 						function likeAction() {
 							let bound = this;
 							bound.innerHTML = "Please Wait...";
@@ -523,6 +558,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 					try { callb(); } catch (TypeError) { console.log("no cb provided"); }
 				}
 			} //add element
+		
 
 
 		}//pinFormer

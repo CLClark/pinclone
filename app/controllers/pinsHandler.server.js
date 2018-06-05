@@ -333,59 +333,59 @@ function PinsHandler() {
 				const values = [];
 				var terms = req.query.terms;
 				var tsQuery;
-				//check if query has specific ownership id...
-				var ownershipOne = req.query.ownership;
-				if(ownershipOne && ownershipOne.length == 36){
-					console.log("finding single ownership volume..." + ownershipOne);
-					//find one	
-					let text = returnText(" ownership.id = $2 AND ");
-					//exclude user check not needed
-					resolve([text, ["dummy_id",ownershipOne]]);	
-				}				
+				/* //check if query has specific ownership id...
+					var ownershipOne = req.query.ownership;
+					if(ownershipOne && ownershipOne.length == 36){
+						console.log("finding single ownership volume..." + ownershipOne);
+						//find one	
+						let text = returnText(" ownership.id = $2 AND ");
+						//exclude user check not needed
+						resolve([text, ["dummy_id",ownershipOne]]);	
+					}		 
+				*/		
 				//check if query has terms (or not = find all books)
-				else if (terms.length > 0 && terms.length < 50) {
+				if (terms.length > 0 && terms.length < 200) {
 					console.log("terms found: " + req.query.terms);
 					let tsSplit = terms.split(/[ ,]+/);
 					tsQuery = tsSplit.join(" & ");
-					let text = returnText("tsv @@ to_tsquery($2) AND ");
-					
-					let userId = req.user.id;
-					//exclude user?
-					if(exclTest == "user"){
+					let text = returnText(" WHERE tsv @@ to_tsquery($2) ");
+					let userCheck = req.user || false; //user logged in?
+					if (userCheck !== false) {
+						let userId = req.user.id || "";
 						resolve([text, [userId, tsQuery]]);
-					} else {
+					} else { //not logged in						
 						resolve([text, ["", tsQuery]]);
-					}					
+					}
 				}//if, search terms present
 				else {
-				//find all	
+					//find all	
 					let text = returnText("");
-					//exclude user?
 					let userCheck = req.user || false; //user logged in?
-					if(userCheck !== false){
+					if (userCheck !== false) {
 						let userId = req.user.id || "";
-						if(exclTest == "user"){
-							//user id for value [0]
-							resolve([text, [userId]]);						
-						} else {
-							//empty string for owner id (array[0])
-							resolve([text, ["dummy_id"]]);						
-						}//else, not excluding
-					//user is not logged in, then we can't exclude userid
-					}else {
 						//empty string for owner id (array[0])
-						resolve([text, ["dummy_id"]]);						
+						resolve([text, [ userId]]);
+						//user is not logged in, then we can't exclude userid
+					} else {
+						//empty string for owner id (array[0])
+						resolve([text, ["dummy_id"]]);
 					}//else, not excluding					
 				}//else, no search terms
 				function returnText(optQuery) {
-					//SELECT title, authors[1] FROM books WHERE tsv @@ to_tsquery($2);
+					/* let tmpText = 'SELECT pins.title, pins.href, pins.image_url, pins.url, pins.active, pins.origindate, pins.volume, pins.tags, pins.lastchecked, pins.size, pins.fformat' +					
+						', COUNT(*) AS pinned_count ' +
+						' FROM ownership INNER JOIN pins ON pins.volume = ownership.pinid WHERE '
+							+ optQuery +
+						' NOT ownership.active = false ';					
+						return tmpText.concat(" AND NOT ownership.owner = $1 GROUP BY volume ");
+					*/
 					let tmpText = 'SELECT pins.title, pins.href, pins.image_url, pins.url, pins.active, pins.origindate, pins.volume, pins.tags, pins.lastchecked, pins.size, pins.fformat' +
-					// ', ownership.id, ownership.pinid, ownership.owner, ownership.active, ownership.date_added, ownership.date_removed ' +
-					', COUNT(*) AS pinned_count ' +
-					' FROM ownership INNER JOIN pins ON pins.volume = ownership.pinid WHERE '
-						+ optQuery +
-					' NOT ownership.active = false ';					
-					return tmpText.concat(" AND NOT ownership.owner = $1 GROUP BY volume ");					
+						', COUNT(*) filter (WHERE likes.active = true) AS pinned_count ' +
+						', COUNT(*) filter (WHERE( likes.userliking = $1) AND ( likes.active = true)) AS self_likes' +
+						' FROM likes INNER JOIN pins ON pins.volume = likes.likedpin '
+						+ optQuery + '';
+						// ' NOT likes.active = false AND ';
+					return tmpText.concat(" GROUP BY volume ");
 				}//returnText fn
 			});
 		}
@@ -536,13 +536,20 @@ function PinsHandler() {
 		function queryMaker() {
 			return new Promise((resolve, reject) => {
 				//query for only active "true" appointments
-				var text = 'SELECT pins.title, pins.href, pins.image_url, pins.url, pins.active, pins.origindate, pins.volume, pins.tags, pins.lastchecked, pins.size, pins.fformat' +
+				/* var text = 'SELECT pins.title, pins.href, pins.image_url, pins.url, pins.active, pins.origindate, pins.volume, pins.tags, pins.lastchecked, pins.size, pins.fformat' +
 					// ', ownership.id, ownership.pinid, ownership.owner, ownership.active, ownership.date_added, ownership.date_removed ' +
 					', COUNT(*) AS pinned_count ' +
 					' FROM ownership INNER JOIN pins ON pins.volume = ownership.pinid' +
 					' WHERE ownership.owner = $1 AND NOT ownership.active = false ' +
 					// limiterText + 
 					' GROUP BY volume';
+				*/
+
+				let text = 'SELECT pins.title, pins.href, pins.image_url, pins.url, pins.active, pins.origindate, pins.volume, pins.tags, pins.lastchecked, pins.size, pins.fformat' +
+					', COUNT(*) AS pinned_count ' +
+					' FROM likes INNER JOIN pins ON pins.volume = likes.likedpin WHERE ' +
+					'likes.userliking = $1 ' +
+					'AND NOT likes.active = false GROUP BY volume';
 
 				const values = [];
 				var uid = req.user.id;
@@ -685,8 +692,8 @@ function PinsHandler() {
 					const insertText =
 						'INSERT INTO public.pins ("title", "href","tags","origindate","image_url","url", "lastchecked", "active") ' +
 						'VALUES($1, $2, $3, $4, $5, $6, $7, $8) ' +
-						' ON CONFLICT ("volume")' +
-						'DO NOTHING RETURNING (title, href,tags,origindate,image_url,url,lastchecked,active), volume AS pinid';
+						' ON CONFLICT (href) DO UPDATE SET title = EXCLUDED.title ' +
+						' RETURNING (title, href,tags,origindate,image_url,url,lastchecked,active), volume AS pinid';
 					const insertValues = [];
 					try {
 						let bt = book.title || "";						
@@ -758,8 +765,9 @@ function PinsHandler() {
 					//id is generated by postgres; "dateRemoved" not used
 					'INSERT INTO public.ownership ("owner","pinid","date_added","active") ' +
 					'VALUES($1, $2, $3, $4) ' +
+					'ON CONFLICT (owner, pinid) WHERE active = false DO UPDATE SET active = true ' +
 					'RETURNING *';
-				// 'ON CONFLICT (owner,bookisbn) DO NOTHING'
+
 			} else if (change == false) {
 				//remove operation
 				active = change;
@@ -767,8 +775,9 @@ function PinsHandler() {
 					//id is generated by postgres; "dateAdded" not used
 					'INSERT INTO public.ownership ("owner","pinid","date_removed","active") ' +
 					'VALUES($1, $2, $3, $4) ' +
+					'ON CONFLICT (owner, pinid) DO NOTHING ' +
 					'RETURNING *';
-				// 'ON CONFLICT (owner,bookisbn) DO NOTHING RETURNING (bookisbn)'; 
+					
 			}
 			if (userid !== null && userid !== undefined) {
 				try {
@@ -863,6 +872,89 @@ function PinsHandler() {
 	}//removeMyBook
 	/***************************************** */		
 
+	//pin if not pinned, unpin if pinned
+	this.likeSwitch = function (req, res) {
+
+		var onOff; //set the function to activate "like" or deactivate
+		if(req.query.switch == "false"){
+			onOff = false;
+		}else{
+			onOff = true;
+		}
+		updatePin(onOff).then((qRes) => {
+			let resJson = {
+				pinStatus: qRes["rows"][0]["active"], 
+				pinHref: qRes["rows"][0]["href"], 
+				pinId: qRes["rows"][0]["volume"]
+			};
+			res.json(resJson);
+			// res.sendStatus(200);	
+		})
+		.catch((e) => {			
+			console.log(e);
+			res.sendStatus(404);
+		});
+
+		function updatePin (polarity) {
+			return new Promise((resolve, reject) => {
+				let pinToSwitch = req.query.pinid;
+				let userid = req.user.id;
+				var active = polarity;
+				// if(polarity == false){
+				// 	active = polarity;
+				// }else{
+				// 	active = true;
+				// }					
+				var insertText;
+				const insertValues = [];
+				insertText =
+					/* //id is generated by postgres; "dateRemoved" not used
+						'INSERT INTO public.ownership ("owner","pinid","date_added","active") ' +
+						'VALUES($1, $2, $3, $4) ' +
+						// 'ON CONFLICT (owner, pinid) DO UPDATE SET active = NOT COALESCE(EXCLUDED.active) ' +
+						'ON CONFLICT (owner, pinid) DO UPDATE SET active = (EXCLUDED.active) ' +
+						'RETURNING *';
+					 */
+					'INSERT INTO public.likes ("userliking","likedpin","likeddate","active") ' +
+					'VALUES($1, $2, $3, $4) ' +
+					'ON CONFLICT (userliking, likedpin) DO UPDATE SET active = (EXCLUDED.active) ' +
+					'RETURNING *';
+					
+					 if (userid !== null && userid !== undefined) {
+					try {
+						let today = new Date(Date.now());
+						insertValues.push(userid); //owner id
+						insertValues.push(pinToSwitch); //book id
+						insertValues.push(today.toISOString()); //dateAdded					
+						insertValues.push(active);
+						function pushSafe(content) {
+							if (content !== null) { return content; } else { return "null"; }
+						}//pushSafe
+					} catch (error) { console.log("ownership try err: " + error); }
+					//new postgresql connection
+					var exPool = new pg.Pool(config);
+					exPool.connect()
+						.then(client2 => {
+							// console.log('pg-connected2');
+							client2.query(insertText, insertValues, function (err, result) {
+								client2.release();
+								if (err) {
+									console.log("ownership query err: " + err); reject(err);
+								} else {
+									console.log("ownership result: " + JSON.stringify(result));
+									resolve(result);
+								}//else
+							});//client.query
+						})
+						.then(() => { exPool.end(); })
+						.catch(err => console.error('error connectingZ', err.stack))
+					//end pool in parent function					
+				}
+			}); //promise
+		}
+
+	}
+
 	// to insert a new trade = query maker + DB call
 	function updateTrade(req, requestedOwn, proposedOwn, change) {
 		return new Promise((resolve, reject) => {
@@ -876,12 +968,12 @@ function PinsHandler() {
 				insertText =
 					//id is generated by postgres; "dateRemoved" not used
 					'INSERT INTO public.trades (' +
-						'"proposer","receiver",' +
-						'"status", "active",' +
-						'"date_proposed",' +
-						// '"date_responded",' +	//not used					
-						// '"paired_trade",' + //not used (yet)
-						' "pro_ownership", "rec_ownership") ' +
+					'"proposer","receiver",' +
+					'"status", "active",' +
+					'"date_proposed",' +
+					// '"date_responded",' +	//not used					
+					// '"paired_trade",' + //not used (yet)
+					' "pro_ownership", "rec_ownership") ' +
 					'VALUES($1, $2, $3, $4, $5, $6, $7) ' +
 					'RETURNING *';
 				// 'ON CONFLICT (owner,bookisbn) DO NOTHING'
@@ -895,8 +987,8 @@ function PinsHandler() {
 					'"status", "active",' +
 					'"date_proposed", "date_responded",' +
 					'"paired_trade", "pro_ownership", "rec_ownership") ' +
-				'VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) ' +
-				'RETURNING *';
+					'VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) ' +
+					'RETURNING *';
 				// 'ON CONFLICT (owner,bookisbn) DO NOTHING RETURNING (bookisbn)'; 
 			}
 			if (userid !== null && userid !== undefined) {
@@ -915,6 +1007,7 @@ function PinsHandler() {
 						if (content !== null) { return content; } else { return "null"; }
 					}//pushSafe
 				} catch (error) { console.log("ownership try err: " + error); }
+
 				//new postgresql connection
 				var exPool = new pg.Pool(config);
 				exPool.connect()
@@ -926,9 +1019,9 @@ function PinsHandler() {
 								console.log("ownership query err: " + err); reject(err);
 							} else {
 								console.log("ownership result: " + JSON.stringify(result));
-								resolve({ 
-									proId: proposedOwn.id, 
-									reqId: requestedOwn.id, 
+								resolve({
+									proId: proposedOwn.id,
+									reqId: requestedOwn.id,
 									dbResult: result.rows
 								});
 
@@ -943,12 +1036,12 @@ function PinsHandler() {
 	}//updateTrade
 
 	//this function takes an ownership array and changes it's tradeable property (boolean)
-	function updateTradeables(ownerships, tradeBool) {		
+	function updateTradeables(ownerships, tradeBool) {
 		//access postgres db
 		return new Promise((resolve, reject) => {
 			//check ownerships length (insert dummy if needed)
 			let ownArray;
-			if(ownerships.length < 2){
+			if (ownerships.length < 2) {
 				ownerships.push("12345678-1234-1234-1234-123456789123"); //dummy id
 				ownArray = ownerships;
 			} else {
@@ -991,7 +1084,7 @@ function PinsHandler() {
 	}//updateTradeables
 
 	//simple update for the owner column
-	function updateOwner(newOwner, ownershipId){
+	function updateOwner(newOwner, ownershipId) {
 		return new Promise((resolve, reject) => {
 			const insertText =			
 				'UPDATE public.ownership ' +
@@ -1311,11 +1404,6 @@ function PinsHandler() {
 			});//promise		
 		}//yelpSingle		
 	}//getAppts
-
-	//pin if not pinned, unpin if pinned
-	this.likeSwitch = function(req, res) {
-		res.sendStatus(200);		
-	}
 
 	/**addMyBook equivalent */
 	this.addAppt = function (req, res) {

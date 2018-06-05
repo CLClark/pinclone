@@ -113,8 +113,8 @@ module.exports = function (app, passport) {
 
 	app.route('/our-pins')
 		.get(pinsHandler.ourPins)
-		.post(isLoggedIn, pinsHandler.likeSwitch);
-		// .delete(isLoggedIn, pinsHandler.updateOwnership);
+		.post(isLoggedIn, pinsHandler.likeSwitch)
+		.delete(isLoggedIn, pinsHandler.likeSwitch);
 
 /* 
 	//form module

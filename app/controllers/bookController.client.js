@@ -246,6 +246,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 				//count div 
 				var countDiv = document.createElement("div");
 				countDiv.className = "pin-count";
+				countDiv.setAttribute("pole",true); //this tells the link to include"pin" or "unpin"
 				if (polljone["pinned_count"] >= 0) {
 					countDiv.innerHTML = polljone["pinned_count"] + " 🌟";
 
@@ -253,15 +254,20 @@ var MYLIBRARY = MYLIBRARY || (function () {
 					function likeAction() {
 						let bound = this;
 						let pinStore = pinCopy["volume"];
-						bound.innerHTML = "Please Wait...";
+						let pinPole = countDiv.getAttribute("pole") || true;
 						bound.setAttribute("style", "background-color:grey;");
-						ajaxFunctions.ready(ajaxFunctions.ajaxRequest('POST', (likeLink + "?pinid=" + pinStore), 8000, function (err, data, status) {
+						ajaxFunctions.ready(ajaxFunctions.ajaxRequest('POST', (likeLink + "?pinid=" + pinStore + "&switch=" + pinPole), 8000, function (err, data, status) {
 							if (err) { console.log(err); bound.innerHTML = "Error"; }
 							else {
 								//handle the server response
-								bound.setAttribute("style", "background-color:green;");
-								bound.innerHTML = "Liked";
-								// console.log(data);
+								let pinResp = JSON.parse(data);
+								if(pinResp.pinStatus == true){
+									bound.setAttribute("pole",false);
+									bound.setAttribute("style", "background-color:green;");								
+								}else{
+									bound.setAttribute("pole",true);
+									bound.setAttribute("style", "");								
+								}				
 							}
 						}));
 					}//likeAction	

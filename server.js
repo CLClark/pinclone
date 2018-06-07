@@ -1,8 +1,9 @@
 'use strict';
 
-/* if(process.env.LOCAL !== true){
+if(process.env.LOCAL !== true){
 	require('dotenv').load();
-} */
+}
+
 var express = require('express');
 var routes = require('./app/routes/index.js');
 var session = require('express-session');

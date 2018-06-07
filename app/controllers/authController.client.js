@@ -115,12 +115,23 @@ var AUTHLIB = AUTHLIB || (function () {
 		}, //navi
 
 		//executes after DOM loaded to contextually set up GUI, mimicking a user interaction
-		finale: function () {
+		finale: function () {			
 			//execute setup functions based on path
 			let searchOursBtn = document.querySelector("#search-pins");			
 			//search our books
 			if (window.location.search == "?our-pins" && searchOursBtn !== null) {
 				searchOursBtn.dispatchEvent(new MouseEvent("click"));
+			}			
+			if (window.location.search.substring(0,5) == "?user") {			
+				let searchField = document.querySelector("#zipSearch");
+				//obtain user id from path
+				let userToFind = window.location.search.substring(6,50).trim();
+				searchField.value =  ("&finduser=" +userToFind);
+				//execute search
+				let keyVent = new KeyboardEvent("keypress", { keyCode: 13 })
+				searchField.dispatchEvent(keyVent);				
+				//reset search field
+				searchField.value =  "";
 			}
 		},//finale 
 
@@ -157,7 +168,7 @@ var AUTHLIB = AUTHLIB || (function () {
 					newSpan.id = "login-nav";
 					var aPro = document.createElement("a");
 					var aLog = document.createElement("div");
-					aLog.className = "btn";
+					aLog.className = "l-btn";
 					aLog.id = "login-btn";
 					var iBar = document.createElement("img");
 					iBar.width = "158";
@@ -227,6 +238,8 @@ var AUTHLIB = AUTHLIB || (function () {
 						navi.appendChild(makeAddPin());
 						var addsBtn = document.querySelector("#add-pin");
 						addsBtn.addEventListener("click", addPin, false);
+
+						resolve();
 					}
 					//if user is not authenticated
 					else {
@@ -237,6 +250,7 @@ var AUTHLIB = AUTHLIB || (function () {
 							authNode.replaceWith(makeDefaultDiv());
 							document.querySelector('#login-btn').addEventListener('click', function () {
 								location.replace('/auth/twitter');
+								resolve();
 							});
 						}
 						//remove lockpic

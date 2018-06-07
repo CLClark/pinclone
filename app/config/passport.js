@@ -65,11 +65,13 @@ module.exports = function (passport) {
 			process.nextTick(function () {
 				var pool = new pg.Pool(config);
 
-				const text = 'SELECT * FROM users WHERE id = $1'; //(id, \"displayName\", gender, locations, city, state)
+				const text = 'SELECT * FROM users WHERE id = $1';
 				const values = [];
 				const userId = profile.id;
+				const sName = profile["displayName"];
+				const pImg = profile["photos"][0]["value"];
 				values.push(userId);
-				// console.log(profile); //testing
+				console.log(JSON.stringify(profile)); //testing
 
 				pool.connect()
 					.then(client => {
@@ -79,25 +81,12 @@ module.exports = function (passport) {
 								return done(err, null);
 							}							
 							if (result.rowCount == 0) {
-								// create a new user
-								const insertText = 'INSERT INTO users(id, \"displayName\", gender, locations, city, state) VALUES($1, $2, $3, $4, $5, $6) RETURNING *';
-								const insertValues = [];
-								insertValues.push(userId); //id
-								if (profile.displayName) { //displayName
-									insertValues.push(profile.displayName);
-								} else { insertValues.push(null); }
-								if (profile.gender) { //gender
-									insertValues.push(profile.gender);
-								} else { insertValues.push(null); }
-								// if (profile.username) { //username
-									// insertValues.push(profile.username);
-								// } else { insertValues.push('null'); }
-								// if (profile.state) { //gender
-								// 	insertValues.push(profile.state);
-								// } else { insertValues.push('null'); }
-								do {
-									insertValues.push(null); //ensure length
-								} while (insertValues.length < 6);
+								// create a new user								
+								const insertText = 'INSERT INTO users(id, \"displayName\", image_url) VALUES ($1, $2, $3) RETURNING *';
+								const insertValues = Array(3);
+								insertValues[0] = (userId); //id
+								insertValues[1] = (sName);											
+								insertValues[2] = (pImg);
 
 								//new postgresql connection
 								var pool2 = new pg.Pool(config);
@@ -116,10 +105,7 @@ module.exports = function (passport) {
 												var user = {
 													id: result.rows[0].id,
 													displayName: result.rows[0].displayName,
-													gender: result.rows[0].gender,
-													locations: result.rows[0].locations,
-													city: result.rows[0].city,
-													state: result.rows[0].state
+													"image_url": result.rows[0]["image_url"]													
 												}
 
 												return done(err, user);
@@ -137,10 +123,7 @@ module.exports = function (passport) {
 								var user = {
 									id: result.rows[0].id,
 									displayName: result.rows[0].displayName,
-									gender: result.rows[0].gender,
-									locations: result.rows[0].locations,
-									city: result.rows[0].city,
-									state: result.rows[0].state
+									"image_url": result.rows[0].gender									
 								};
 								return done(err, user);
 							}

@@ -242,16 +242,19 @@ function PinsHandler() {
 				const values = [];
 				var terms = req.query.terms;
 				var tsQuery;
-				/* //check if query has specific ownership id...
-					var ownershipOne = req.query.ownership;
-					if(ownershipOne && ownershipOne.length == 36){
-						console.log("finding single ownership volume..." + ownershipOne);
-						//find one	
-						let text = returnText(" ownership.id = $2 AND ");
-						//exclude user check not needed
-						resolve([text, ["dummy_id",ownershipOne]]);	
-					}		 
-				*/		
+
+				 //check if query has specific ownership id...
+				var findOne = req.query["FINDUSER"];
+				var reqId = req.user.id;
+
+				if(findOne && findOne.length > 0){
+					console.log("finding single user's pins... " + findOne);
+					//find one	
+					let text = returnText(" AND ownership.owner = $2");
+					//exclude user check not needed
+					resolve([text, [reqId, findOne]]);	
+				}		 
+						
 				//check if query has terms (or not = find all books)
 				if (terms.length > 0 && terms.length < 200) {
 					console.log("terms found: " + req.query.terms);
@@ -281,22 +284,28 @@ function PinsHandler() {
 					}//else, not excluding					
 				}//else, no search terms
 				function returnText(optQuery) {
-					/* let tmpText = 'SELECT pins.title, pins.href, pins.image_url, pins.url, pins.active, pins.origindate, pins.volume, pins.tags, pins.lastchecked, pins.size, pins.fformat' +					
-						', COUNT(*) AS pinned_count ' +
-						' FROM ownership INNER JOIN pins ON pins.volume = ownership.pinid WHERE '
-							+ optQuery +
-						' NOT ownership.active = false ';					
-						return tmpText.concat(" AND NOT ownership.owner = $1 GROUP BY volume ");
-					*/
 					let tmpText = 'SELECT pins.title, pins.href, pins.image_url, pins.url, pins.active, pins.origindate, pins.volume, pins.tags, pins.lastchecked, pins.size, pins.fformat' +
+					', COUNT(*) filter (WHERE likes.active = true) AS pinned_count ' +
+					', COUNT(*) filter (WHERE( likes.userliking = $1) AND ( likes.active = true)) AS self_likes' +
+					', COUNT(*) filter (where (ownership.owner = $1) ) AS owned_pin ' +
+					 ', users.image_url AS userimg, users.id AS userlink ' +
+					' FROM ownership LEFT OUTER JOIN pins ON ownership.pinid = pins.volume ' +
+					' LEFT OUTER JOIN users ON ownership.owner = users.id ' +
+					' LEFT OUTER JOIN likes ON likes.likedpin = ownership.pinid ' +					
+					' WHERE ownership.active = true ' + optQuery;
+
+					// ' NOT likes.active = false AND ';
+					/* let tmpText = 'SELECT pins.title, pins.href, pins.image_url, pins.url, pins.active, pins.origindate, pins.volume, pins.tags, pins.lastchecked, pins.size, pins.fformat' +
 						', COUNT(*) filter (WHERE likes.active = true) AS pinned_count ' +
 						', COUNT(*) filter (WHERE( likes.userliking = $1) AND ( likes.active = true)) AS self_likes' +
 						', COUNT(*) filter (where (ownership.owner = $1) ) AS owned_pin ' +
+						// ', users.image_url AS ownerimg' +
 						' FROM pins LEFT OUTER JOIN likes ON pins.volume = likes.likedpin ' +
 						' LEFT OUTER JOIN ownership ON ownership.pinid = pins.volume ' +
-						' WHERE ownership.active = true '+ optQuery ;
-						// ' NOT likes.active = false AND ';
-					return tmpText.concat(" GROUP BY volume ");
+						// ' LEFT JOIN users ON ownership.owner = users.id ' +
+						' WHERE ownership.active = true ' + optQuery;
+						// ' NOT likes.active = false AND '; */
+					return tmpText.concat(" GROUP BY volume, users.image_url, users.id");
 				}//returnText fn
 			});
 		}
@@ -723,7 +732,7 @@ function PinsHandler() {
 	/***************************************** */
 	this.removeMyPin = function (req, res) {
 		console.log('removeMyPin callback');
-		var userId = new String(req.user.id).substring(0, 140) || null; //arbitrary cut off
+		var userId = new String(req.user.id).substring(0, 140).trim() || null; //arbitrary cut off
 
 		if (req.query.volume !== null && req.query.volume !== "undefined") {
 			//1 get the book ID

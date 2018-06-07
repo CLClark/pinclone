@@ -285,9 +285,17 @@ var MYLIBRARY = MYLIBRARY || (function () {
 								}				
 							}
 						}));
-					}//likeAction	
-
+					}//likeAction
 					newWrapSup.appendChild(countDiv);
+
+					//alternate method of liking/pinning
+					// newWrapSup.addEventListener("click", likeAction.bind(countDiv), { once: false });
+					// newWrapSup.addEventListener("click", springLike);
+					function springLike(){						
+						let mouseVent = new MouseEvent("click")
+						countDiv.dispatchEvent(mouseVent);	
+					}
+
 				}//pinnedcount
 
 				//setup delete button
@@ -322,6 +330,19 @@ var MYLIBRARY = MYLIBRARY || (function () {
 					//append to DOM
 					newWrapSup.appendChild(addButton);
 				}//delete
+
+				//user image
+				if(polljone["userimg"] !== null && polljone["userimg"] !== undefined){
+					let usrIconWrap = document.createElement("div");
+					usrIconWrap.className = "user-icon";
+						let usricon = document.createElement("img");
+						usricon.src = polljone["userimg"];
+						let userLink = document.createElement("a");
+						userLink.setAttribute("href", ('/?user=' + polljone["userlink"]));				
+					userLink.appendChild(usricon);
+					usrIconWrap.appendChild(userLink);					
+					newWrapSup.appendChild(usrIconWrap);
+				}
 
 				//"sup" wrap background image
 				if (pinCopy["image_url"]) {

@@ -58,10 +58,11 @@ module.exports = function (app, passport) {
 			res.redirect('/');
 		});
  
-	/* app.route('/profile')
+	app.route('/profile')
 		.get(isLoggedIn, function (req, res) {
-			res.sendFile(path + '/public/profile.html');
-		}); */
+			res.redirect('/?user=' + req.user.id);
+			// res.sendFile(path + '/public/profile.html');
+		});
  
  
 	/*app.route('/api/:id')
@@ -113,60 +114,8 @@ module.exports = function (app, passport) {
 
 	app.route('/our-pins')
 		.get(pinsHandler.ourPins)
-		.post(isLoggedIn, pinsHandler.likeSwitch)
-		.delete(isLoggedIn, pinsHandler.likeSwitch);
+		.post(isLoggedIn, pinsHandler.likeSwitch);
+		// .delete(isLoggedIn, pinsHandler.likeSwitch);
 
-/* 
-	//form module
-	var bodyParser = require('body-parser');
-	// create application/x-www-form-urlencoded parser
-	var urlencodedParser = bodyParser.urlencoded({ extended: false })	
-	 */
-	/******************************************* */
-
-/* var booksHandler = new BooksHandler();
-	var userHandler = new UserHandler();
-
-	app.route('/books')
-		.get(isLoggedIn, booksHandler.allBooks);		
-
-	app.route('/club')
-		//no login required		
-		.get(booksHandler.ourBooks)
-		//handle profile updates		
-		.post(isLoggedIn, urlencodedParser, function (req, res, next) {
-			if (!req.body) return res.sendStatus(400);
-			return next();
-		      }, userHandler.updateProfile)
-		
-	app.route('/my-books')
-		.get(isLoggedIn, booksHandler.myBooks)
-		.post(isLoggedIn, booksHandler.addMyBook)
-		.delete(isLoggedIn, booksHandler.removeMyBook);
-
-	app.route('/my-trades')
-		.get(isLoggedIn, booksHandler.myTrades);
-
-	app.route('/trade')
-		.get(isLoggedIn, function (req, res) {
-			res.sendFile(path + '/public/trade.html');
-		})
-		.post(isLoggedIn, urlencodedParser, function (req, res, next) {
-			if (!req.body) return res.sendStatus(400);
-			return next();
-		}, booksHandler.newTrade);
-
-	app.route('/trade-response')
-		//accept or reject a trade...
-		.post(isLoggedIn, urlencodedParser, function (req, res, next) {
-			if (!req.body) return res.sendStatus(400);
-			return next();
-		}, booksHandler.tradeResponse); 
-
-	// app.route('/books/db')
-	// 	.get(isLoggedIn, booksHandler.getAppts)
-	// 	.post(isLoggedIn, booksHandler.addMyBook)
-	// 	.delete(isLoggedIn, booksHandler.deleteAppt);
-	*/
 
 };

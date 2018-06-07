@@ -1,8 +1,8 @@
 'use strict';
 
-if(process.env.LOCAL !== true){
+/* if(process.env.LOCAL !== true){
 	require('dotenv').load();
-}
+} */
 var express = require('express');
 var routes = require('./app/routes/index.js');
 var session = require('express-session');
@@ -45,11 +45,11 @@ const server = http.createServer(app);
 
 var port;
 
-if(process.env.LOCAL == true){
+/* if(process.env.LOCAL == true){
 	port = 8080;	
 }else{
 	port = '/tmp/nginx.socket';
-}
+} */
 
 port = '/tmp/nginx.socket';
 

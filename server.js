@@ -51,6 +51,8 @@ if(process.env.LOCAL == true){
 	port = '/tmp/nginx.socket';
 }
 
+port = '/tmp/nginx.socket';
+
 server.listen(port, function () {
 	console.log('Node.js listening on port ' + port + '...');
 	fs.closeSync(fs.openSync('/tmp/app-initialized', 'w'));	

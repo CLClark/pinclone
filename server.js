@@ -45,17 +45,11 @@ const server = http.createServer(app);
 
 var port;
 
-//TODO: localize dotenv vars
-/* if(process.env.LOCAL !== true){
-	require('dotenv').load();
-}else{
-} */
-
-// if(process.env.LOCAL == true){
+if(process.env.LOCAL == true){
 	port = 8080;	
-// }else{
-	// port = '/tmp/nginx.socket';
-// }
+}else{
+	port = '/tmp/nginx.socket';
+}
 
 server.listen(port, function () {
 	console.log('Node.js listening on port ' + port + '...');

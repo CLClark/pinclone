@@ -569,7 +569,7 @@ function PinsHandler() {
 				});
 				res2.on('end', () => { // console.log(body1); 
 					console.log(Buffer.concat(body1).toString("utf8", 0, 4));
-					if (contentType.substring(0, 5) == "image") {
+					if (contentType.substring(0, 5) == "image") {						
 						//passes the image check
 						//>insert into database
 						try {
@@ -592,9 +592,31 @@ function PinsHandler() {
 								.then((updateRes) => {
 									res.json(updateRes);
 								}).catch((e) => { console.log(e); })
+						} catch (e) { console.error(e); res.sendStatus(404); }
+					} else { //the image did not respond properly...
+						try {
+							// title, volume, href,tags,origindate,image_url,url,active
+							let today = new Date(Date.now());
+							insertMyPin({
+								title: linkId.href,
+								href: '/img/ph.png',
+								tags: (tagsToo + 'error'),
+								origindate: today.toISOString(),
+								lastchecked: res2.headers["date"] || null,
+								image_url: '/img/ph.png',
+								url: linkId.href,
+								active: true
+							})
+								.then((insertResult) => {
+									console.log("insert result: " + insertResult)
+									return updateOwnership(req, insertResult[0], true)
+								})
+								.then((updateRes) => {
+									res.json(updateRes);
+								}).catch((e) => { console.log(e); })
 
 						} catch (e) { console.error(e); res.sendStatus(404); }
-					}					
+					}//else image not correct
 				});
 			});
 			sreq.on('error', (e) => {

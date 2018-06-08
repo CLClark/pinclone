@@ -37,6 +37,19 @@ This will install the Pinclone components into the `your-project` directory.
 To enable NGINX to act as proxy server,
 add the following Buildpack to your Heroku dyno: https://github.com/CLClark/heroku-buildpack-nginx.git
 
+### PostgreSQL Setup
+
+Use the SQL statements within [postgres-sql.sql](postgres-sql.sql), substituting your own username to create the required tables:
+-likes
+-pins
+-ownership
+-users
+-session
+
+and trigger functions:
+-initlike
+-tsv_trigger
+
 ### Contributing
 
 This is an open-source project to fufill FreeCodeCamp project requirements, contributions are welcome, simply send me a note on Github.

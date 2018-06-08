@@ -35,7 +35,8 @@ This will install the Pinclone components into the `your-project` directory.
 ### Heroku Setup
 
 To enable NGINX to act as proxy server on your Heroku dyno,
-add the following Buildpack: https://github.com/CLClark/heroku-buildpack-nginx.git
+add the following Buildpack: 
+https://github.com/CLClark/heroku-buildpack-nginx.git
 
 Also, you will need to set the following environmental variables in your Heroku dyno with:
 
@@ -46,9 +47,9 @@ heroku config:set KEY=VALUE
 * API_KEY (from your Twitter app credentials)
 * TWITTER_SECRET(from your Twitter app credentials)
 * APP_URL (ex: https://my-heroku-dyno.herokuapp.com)
-* PGSSLMODE = require
+* ```PGSSLMODE=require```
 * DATABASE_URL (your PostgreSQL single line access URL; includes username, password, database url, etc.)
-* LOCAL = ('true' if you are running on localhost instead of heroku )
+* LOCAL = ('true' if you are running on localhost instead of heroku, otherwise: false )
 
 If you are running this app locally instead of Heroku, save these to your server's .env file.
 
@@ -68,7 +69,7 @@ and trigger functions:
 * initlike
 * tsv_trigger
 
-Pinclone also requires the pgcrypto PostgreSQL module, be sure to install or add it to your PostgreSQL instance.
+Pinclone also requires the [pgcrypto](https://www.postgresql.org/docs/current/static/pgcrypto.html) PostgreSQL module, be sure to install or add it to your PostgreSQL instance.
 
 ### Contributing
 
@@ -80,8 +81,8 @@ You can find a complete step-by-step tutorial on how to create this app from the
 
 ## Authors
 
-* **CL Clark ** - *Initial work* - [CLClark](https://github.com/CLClark/)
+* **Chris L Clark ** - *Initial work* - [CLClark](https://github.com/CLClark/)
 
 ## License
 
-Apache License. [Click here for more information.](LICENSE.md)
+Apache License 2.0. [Click here for more information.](LICENSE.md)

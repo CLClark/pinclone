@@ -4,11 +4,11 @@
 
 Pinclone is a fullstack JavaScript implementation of the Pinterest website utilizing PostgreSQL, Express, Node.js and NGINX. Fufilling the FreeCodeCamp project requirements:
 
--Pinclone allows users to login with their Twitter account.
--Users can link images to their account, or delete those images.
--A Pinterest-style wall is displayed containing all images a user's linked to or "liked" from other users.
--One can browse other users' walls of images by clicking a specific user's icon.
--Upon a user linking an image to their account, the Node.js server checks that the image link is not broken, and if so, replaces the image with a placeholder image.
+* Pinclone allows users to login with their Twitter account.
+* Users can link images to their account, or delete those images.
+* A Pinterest-style wall is displayed containing all images a user's linked to or "liked" from other users.
+* One can browse other users' walls of images by clicking a specific user's icon.
+* Upon a user linking an image to their account, the Node.js server checks that the image link is not broken, and if so, replaces the image with a placeholder image.
 
 ## Quick Start Guide
 
@@ -40,15 +40,17 @@ add the following Buildpack to your Heroku dyno: https://github.com/CLClark/hero
 ### PostgreSQL Setup
 
 Use the SQL statements within [postgres-sql.sql](postgres-sql.sql), substituting your own username to create the required tables:
--likes
--pins
--ownership
--users
--session
+* likes
+* pins
+* ownership
+* users
+* session
 
 and trigger functions:
--initlike
--tsv_trigger
+* initlike
+* tsv_trigger
+
+Pinclone also requires the pgcrypto PostgreSQL module, be sure to install or add it to your PostgreSQL instance.
 
 ### Contributing
 
@@ -56,7 +58,7 @@ This is an open-source project to fufill FreeCodeCamp project requirements, cont
 
 ### Tutorial
 
-You can find a complete step-by-step tutorial on how to create this app from the ground up [here](...).
+You can find a complete step-by-step tutorial on how to create this app from the ground up [here]().
 
 ## Features
 

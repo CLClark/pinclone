@@ -9,7 +9,7 @@ Pinclone is a fullstack JavaScript implementation of the Pinterest website utili
 
 * Pinclone allows users to login with their Twitter account.
 * Users can link images to their account, or delete those images.
-* A Pinterest-style wall is displayed containing all images a user's linked to or "liked" from other users.
+* A Pinterest-style wall is displayed containing all images a user's linked to or "liked" from other users. Implemented with [Masonry](https://masonry.desandro.com/)
 * One can browse other users' walls of images by clicking a specific user's icon.
 * Upon a user linking an image to their account, the Node.js server checks that the image link is not broken, and if so, replaces the image with a placeholder image.
 
@@ -85,6 +85,10 @@ You can find a complete step-by-step tutorial on how to create this app from the
 ## Authors
 
 * **Chris L Clark ** - *Initial work* - [CLClark](https://github.com/CLClark/)
+
+## Acknowledgements
+
+Thanks to (Masonry)[https://masonry.desandro.com/] for the frontend grid layout code.
 
 ## License
 

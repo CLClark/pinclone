@@ -2,7 +2,7 @@
 
 ## Overview
 
-Pinclone is a fullstack JavaScript implementation of the Pinterest website utilizing PostgreSQL, Express, Node.js and NGINX. Fufilling the FreeCodeCamp project requirements:
+Pinclone is a fullstack JavaScript implementation of the Pinterest website utilizing PostgreSQL, Express, Node.js and NGINX via Heroku deployment. Fufilling the FreeCodeCamp project requirements:
 
 * Pinclone allows users to login with their Twitter account.
 * Users can link images to their account, or delete those images.
@@ -34,8 +34,26 @@ This will install the Pinclone components into the `your-project` directory.
 
 ### Heroku Setup
 
-To enable NGINX to act as proxy server,
-add the following Buildpack to your Heroku dyno: https://github.com/CLClark/heroku-buildpack-nginx.git
+To enable NGINX to act as proxy server on your Heroku dyno,
+add the following Buildpack: https://github.com/CLClark/heroku-buildpack-nginx.git
+
+Also, you will need to set the following environmental variables in your Heroku dyno with:
+
+```
+heroku config:set KEY=VALUE
+```
+* ZOO_COOKIE_SECRET (create a server-side secret hash for session management)
+* API_KEY (from your Twitter app credentials)
+* TWITTER_SECRET(from your Twitter app credentials)
+* APP_URL (ex: https://my-heroku-dyno.herokuapp.com)
+* PGSSLMODE = require
+* DATABASE_URL (your PostgreSQL single line access URL; includes username, password, database url, etc.)
+* LOCAL = ('true' if you are running on localhost instead of heroku )
+
+If you are running this app locally instead of Heroku, save these to your server's .env file.
+
+### Twitter Setup
+coming...
 
 ### PostgreSQL Setup
 
@@ -60,19 +78,9 @@ This is an open-source project to fufill FreeCodeCamp project requirements, cont
 
 You can find a complete step-by-step tutorial on how to create this app from the ground up [here]().
 
-## Features
-
-| Features|           
-|:---------          |:--------:|
-| PostgreSQL            | _Yes_     |
-| Express            | _Yes_     |
-| Node.js            | _Yes_     |
-| Passport             | _Yes_     |
-
 ## Authors
 
 * **CL Clark ** - *Initial work* - [CLClark](https://github.com/CLClark/)
-
 
 ## License
 

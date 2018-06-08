@@ -47,7 +47,7 @@ You can find a complete step-by-step tutorial on how to create this app from the
 
 ## Features
 
-| Features           
+| Features|           
 |:---------          |:--------:|
 | PostgreSQL            | _Yes_     |
 | Express            | _Yes_     |

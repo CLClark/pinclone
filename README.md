@@ -1,5 +1,7 @@
 # Pinclone: FreeCodeCamp Project - Pinterest Functionality Clone
 
+See the app running [here](https://fcc-pin-clone.herokuapp.com/).
+
 ## Overview
 
 Pinclone is a fullstack JavaScript implementation of the Pinterest website utilizing PostgreSQL, Express, Node.js and NGINX via Heroku deployment. Fufilling the FreeCodeCamp project requirements:
@@ -19,7 +21,7 @@ In order to use Pinclone, you must have the following installed:
 - [Node.js](https://nodejs.org/)
 - [NPM](https://nodejs.org/)
 - [PostgreSQL](https://www.postgresql.org/)
-- [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli)
+- [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli)(optional)
 - [PGAdmin](https://www.pgadmin.org/) (optional)
 
 ### Installation & Startup

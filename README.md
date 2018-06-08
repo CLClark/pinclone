@@ -1,4 +1,5 @@
-# Pinclone: FreeCodeCamp Project - Pinterest Functionality Clone
+# Pinclone: FreeCodeCamp Project 
+Pinterest Functionality Clone
 
 See the app running [here](https://fcc-pin-clone.herokuapp.com/).
 

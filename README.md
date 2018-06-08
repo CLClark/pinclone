@@ -69,6 +69,10 @@ You can find a complete step-by-step tutorial on how to create this app from the
 | Node.js            | _Yes_     |
 | Passport             | _Yes_     |
 
+## Authors
+
+* **CL Clark ** - *Initial work* - [CLClark](https://github.com/CLClark/)
+
 
 ## License
 

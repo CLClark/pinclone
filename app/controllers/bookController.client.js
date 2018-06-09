@@ -349,7 +349,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 					var newWrapPic = document.createElement("img");
 					newWrapPic.src = (pinCopy["url"]);
 					newWrapSup.setAttribute("style",
-					"background-image: url(" + pinCopy["image_url"] + ")");
+					"background-image: url(\'" + pinCopy["image_url"] + "\')");
 					newWrapSup.appendChild(newWrapPic);
 				}//if image_url						
 

@@ -529,13 +529,15 @@ function PinsHandler() {
 			//1 get the link [and tags?]
 			var volId = new String(req.query.volume).substring(0, 20) || null;
 			var linkId = url.parse(querystring.unescape(new String(req.query.link).substring(0, 500))) || null;
+			linkId.protocol = 'https:';
 			//save to session...
 			req.session.lastPinned = linkId.href;
 			//2 query the link for response (check if image)
 			// console.log(linkId);	//testing					
 			options = {
 				hostname: linkId.hostname,
-				port: linkId.port,
+				// port: linkId.port, //require https port
+				port: 443,
 				path: (linkId.pathname),
 				method: 'GET',
 				headers: {

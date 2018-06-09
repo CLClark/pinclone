@@ -15,7 +15,7 @@ Pinclone is a fullstack JavaScript implementation of the Pinterest website utili
 
 ## Quick Start Guide
 
-![Stockswatch Screenshot](/pinclone_screenshot.png)
+![Stockswatch Screenshot](/pinclone_screenshot2.png)
 
 ### Prerequisites
 

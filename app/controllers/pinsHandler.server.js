@@ -245,10 +245,11 @@ function PinsHandler() {
 				var tsQuery;
 
 				 //check if query has specific ownership id...
-				var findOne = req.query["FINDUSER"];
-				var reqId = req.user.id;
+				var findOne = req.query["FINDUSER"];				
 
 				if(findOne && findOne.length > 0){
+					var reqId = req.user.id || null;
+					
 					console.log("finding single user's pins... " + findOne);
 					//find one	
 					let text = returnText(" AND ownership.owner = $2");

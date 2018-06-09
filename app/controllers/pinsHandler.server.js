@@ -232,6 +232,7 @@ function PinsHandler() {
 		});
 	}//pinBuilder
 	
+	//answers seach queries for pins (with or without search terms)
 	this.ourPins = function (req, res) {
 		 //optional parameter "exclusion=user" to exclude "her own pins" from results
 		console.log('handler.server.js.ourPins');
@@ -292,7 +293,7 @@ function PinsHandler() {
 					' FROM ownership LEFT OUTER JOIN pins ON ownership.pinid = pins.volume ' +
 					' LEFT OUTER JOIN users ON ownership.owner = users.id ' +
 					' LEFT OUTER JOIN likes ON likes.likedpin = ownership.pinid ' +					
-					' WHERE ownership.active = true ' + optQuery;
+					' WHERE ownership.active = true AND pins.active = true ' + optQuery;
 
 					// ' NOT likes.active = false AND ';
 					/* let tmpText = 'SELECT pins.title, pins.href, pins.image_url, pins.url, pins.active, pins.origindate, pins.volume, pins.tags, pins.lastchecked, pins.size, pins.fformat' +
@@ -449,15 +450,6 @@ function PinsHandler() {
 		var pool = new pg.Pool(config);
 		function queryMaker() {
 			return new Promise((resolve, reject) => {
-				//query for only active "true" appointments
-				/* var text = 'SELECT pins.title, pins.href, pins.image_url, pins.url, pins.active, pins.origindate, pins.volume, pins.tags, pins.lastchecked, pins.size, pins.fformat' +
-					// ', ownership.id, ownership.pinid, ownership.owner, ownership.active, ownership.date_added, ownership.date_removed ' +
-					', COUNT(*) AS pinned_count ' +
-					' FROM ownership INNER JOIN pins ON pins.volume = ownership.pinid' +
-					' WHERE ownership.owner = $1 AND NOT ownership.active = false ' +
-					// limiterText + 
-					' GROUP BY volume';
-				*/
 
 				let text = 'SELECT pins.title, pins.href, pins.image_url, pins.url, pins.active, pins.origindate, pins.volume, pins.tags, pins.lastchecked, pins.size, pins.fformat' +
 					', COUNT(*) filter (WHERE likes.active = true) AS pinned_count ' +
@@ -466,7 +458,7 @@ function PinsHandler() {
 					' FROM pins LEFT OUTER JOIN likes ON pins.volume = likes.likedpin ' +
 					' LEFT OUTER JOIN ownership ON ownership.pinid = pins.volume ' +
 					' WHERE likes.userliking = $1 ' +
-					' AND ownership.active = true ' +
+					' AND ownership.active = true AND pins.active = true' +
 					' AND NOT likes.active = false GROUP BY volume';
 
 				const values = [];
